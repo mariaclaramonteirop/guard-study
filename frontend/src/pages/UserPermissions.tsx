@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../api/client';
 import { ErrorMessage } from '../components/ErrorMessage';
@@ -7,6 +7,7 @@ import { Loading } from '../components/Loading';
 import { SectionTitle } from '../components/SectionTitle';
 import { useFetch } from '../hooks/useFetch';
 import { MODULES, type ModuleKey } from '../config/permissions';
+import { getSessionUser } from '../api/session';
 import type { User } from '../types';
 
 type PermissionState = Record<ModuleKey, boolean>;
@@ -19,6 +20,7 @@ function buildDefaultPermissions(role: User['role']): PermissionState {
 }
 
 export function UserPermissions() {
+  const currentUser = getSessionUser();
   const [searchParams] = useSearchParams();
   const initialUser = Number(searchParams.get('user') ?? 0) || null;
   const [selectedUserId, setSelectedUserId] = useState<number | null>(initialUser);
@@ -27,7 +29,7 @@ export function UserPermissions() {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
-  const loadUsers = useFetch(() => api.get<User[]>('/users'));
+  const loadUsers = useFetch(useCallback(() => api.get<User[]>('/users'), []));
   const users = loadUsers.data ?? [];
 
   useEffect(() => {
@@ -77,6 +79,10 @@ export function UserPermissions() {
   }, [selectedUserId]);
 
   const enabledCount = useMemo(() => Object.values(permissions).filter(Boolean).length, [permissions]);
+
+  if (currentUser?.role !== 'manager' && currentUser?.role !== 'admin') {
+    return <ErrorMessage message="Acesso permitido apenas para manager ou admin." />;
+  }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

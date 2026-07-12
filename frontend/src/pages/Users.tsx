@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { List } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { api } from '../api/client';
 import { EmptyState } from '../components/EmptyState';
@@ -42,10 +43,18 @@ export function Users() {
                 <span className="mt-2 inline-block rounded bg-stone-100 px-2 py-1 text-xs">{user.role}</span>
               </div>
               <div className="flex flex-wrap gap-2">
-                <Link to={`/users/permissions?user=${user.id}`} className="rounded border border-stone-300 px-3 py-1 text-sm">
-                  Permissões
+                <Link
+                  to={`/users/permissions?user=${user.id}`}
+                  className="inline-flex items-center gap-2 rounded border border-stone-300 px-3 py-1 text-sm"
+                  aria-label={`Abrir permissões de ${user.name}`}
+                  title="Permissões"
+                >
+                  <List className="h-4 w-4" />
+                  <span>Permissões</span>
                 </Link>
-                <Link to={`/users/${user.id}/edit`} className="rounded border border-stone-300 px-3 py-1 text-sm">Editar</Link>
+                <Link to={`/users/${user.id}/edit`} className="rounded border border-stone-300 px-3 py-1 text-sm">
+                  Editar
+                </Link>
                 {(currentUser?.role === 'manager' || currentUser?.role === 'admin') && (
                   <button onClick={() => void remove(user.id)} className="rounded border border-stone-300 px-3 py-1 text-sm">
                     Excluir

@@ -1,6 +1,7 @@
 import { FormEvent, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
+import { setSessionUser } from '../api/session';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { AuthShell, Field, SubmitButton } from '../components/auth/AuthShell';
 import type { User } from '../types';
@@ -19,8 +20,9 @@ export function Signup() {
     setError(null);
 
     try {
-      await api.post<User>('/auth/signup', { name, email, password });
-      navigate('/login');
+      const user = await api.post<User>('/auth/signup', { name, email, password });
+      setSessionUser({ id: user.id, role: user.role, name: user.name, permissions: user.permissions });
+      navigate('/');
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Nao foi possivel criar a conta.');
     } finally {
