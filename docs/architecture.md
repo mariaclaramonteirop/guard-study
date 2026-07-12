@@ -43,4 +43,5 @@ Regras principais:
 - `Checkpoint` pertence a um `StudyLog`.
 - `Mistake` pertence a um `StudyLog`.
 - `Mistake` pode pertencer tambem a um `Checkpoint`.
+- `ChecklistItem` pertence a um `StudyLog`.
 - `User` possui `role`: `admin` ou `user`.

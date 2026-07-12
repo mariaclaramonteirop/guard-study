@@ -86,6 +86,29 @@ Payload:
 }
 ```
 
+## Checklists
+
+Checklist fica ligado ao `StudyLog`.
+
+| Metodo | Rota | Descricao |
+|---|---|---|
+| GET | `/checklists` | Lista itens |
+| GET | `/checklists/{id}` | Detalha um item |
+| POST | `/checklists` | Cria um item |
+| PUT | `/checklists/{id}` | Atualiza um item |
+| PATCH | `/checklists/{id}/toggle` | Alterna concluido |
+| DELETE | `/checklists/{id}` | Remove um item |
+
+Payload:
+
+```json
+{
+  "study_log_id": 1,
+  "title": "Refazer exemplo de classe",
+  "is_completed": 0
+}
+```
+
 ## Mistakes
 
 | Metodo | Rota | Descricao |

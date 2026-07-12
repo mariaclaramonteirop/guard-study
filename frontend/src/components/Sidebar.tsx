@@ -36,6 +36,13 @@ const sections = [
       { to: '/review-schedules/new', label: 'Cadastro' },
     ],
   },
+  {
+    label: 'Usuarios',
+    items: [
+      { to: '/users', label: 'Gerenciar' },
+      { to: '/users/new', label: 'Cadastro' },
+    ],
+  },
 ];
 
 export function Sidebar() {
@@ -43,7 +50,6 @@ export function Sidebar() {
     <aside className="border-r border-violet-900/40 bg-violet-950 px-3 py-4 text-white md:min-h-screen md:w-72">
       <div className="mb-5 px-3">
         <strong className="block text-lg">Guard Study</strong>
-        <span className="text-xs text-violet-200/80">MVP de aprendizado</span>
       </div>
       <nav className="space-y-4">
         <NavLink to="/" className={({ isActive }) => `block rounded px-3 py-2 text-sm ${isActive ? 'bg-guard text-white' : 'text-stone-200 hover:bg-white/10'}`}>

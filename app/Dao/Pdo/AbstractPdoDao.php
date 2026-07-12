@@ -19,21 +19,35 @@ abstract class AbstractPdoDao implements ResourceDaoInterface
     ) {
     }
 
-    public function all(): array
+    public function all(?int $ownerId = null, ?string $ownerColumn = null): array
     {
         try {
-            $statement = $this->pdo->query("SELECT * FROM {$this->table} ORDER BY id DESC");
+            $sql = "SELECT * FROM {$this->table}";
+            $params = [];
+            if ($ownerId !== null && $ownerColumn !== null) {
+                $sql .= " WHERE {$ownerColumn} = :owner_id";
+                $params['owner_id'] = $ownerId;
+            }
+            $sql .= " ORDER BY id DESC";
+            $statement = $this->pdo->prepare($sql);
+            $statement->execute($params);
             return $statement->fetchAll();
         } catch (Throwable $exception) {
             throw DaoException::from($exception);
         }
     }
 
-    public function find(int $id): ?array
+    public function find(int $id, ?int $ownerId = null, ?string $ownerColumn = null): ?array
     {
         try {
-            $statement = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE id = :id");
-            $statement->execute(['id' => $id]);
+            $sql = "SELECT * FROM {$this->table} WHERE id = :id";
+            $params = ['id' => $id];
+            if ($ownerId !== null && $ownerColumn !== null) {
+                $sql .= " AND {$ownerColumn} = :owner_id";
+                $params['owner_id'] = $ownerId;
+            }
+            $statement = $this->pdo->prepare($sql);
+            $statement->execute($params);
             $row = $statement->fetch();
             return $row ?: null;
         } catch (Throwable $exception) {
@@ -55,35 +69,46 @@ abstract class AbstractPdoDao implements ResourceDaoInterface
         }
     }
 
-    public function update(int $id, array $data): ?array
+    public function update(int $id, array $data, ?int $ownerId = null, ?string $ownerColumn = null): ?array
     {
         try {
             $columns = $this->fillableColumns($data);
             $sets = implode(', ', array_map(fn (string $column): string => "{$column} = :{$column}", $columns));
             $payload = $this->only($data, $columns);
             $payload['id'] = $id;
-            $statement = $this->pdo->prepare("UPDATE {$this->table} SET {$sets} WHERE id = :id");
+            $sql = "UPDATE {$this->table} SET {$sets} WHERE id = :id";
+            if ($ownerId !== null && $ownerColumn !== null) {
+                $sql .= " AND {$ownerColumn} = :owner_id";
+                $payload['owner_id'] = $ownerId;
+            }
+            $statement = $this->pdo->prepare($sql);
             $statement->execute($payload);
-            return $statement->rowCount() > 0 ? $this->find($id) : $this->find($id);
+            return $this->find($id, $ownerId, $ownerColumn);
         } catch (Throwable $exception) {
             throw DaoException::from($exception);
         }
     }
 
-    public function delete(int $id): bool
+    public function delete(int $id, ?int $ownerId = null, ?string $ownerColumn = null): bool
     {
         try {
-            $statement = $this->pdo->prepare("DELETE FROM {$this->table} WHERE id = :id");
-            $statement->execute(['id' => $id]);
+            $sql = "DELETE FROM {$this->table} WHERE id = :id";
+            $params = ['id' => $id];
+            if ($ownerId !== null && $ownerColumn !== null) {
+                $sql .= " AND {$ownerColumn} = :owner_id";
+                $params['owner_id'] = $ownerId;
+            }
+            $statement = $this->pdo->prepare($sql);
+            $statement->execute($params);
             return $statement->rowCount() > 0;
         } catch (Throwable $exception) {
             throw DaoException::from($exception);
         }
     }
 
-    public function patch(int $id, array $data): ?array
+    public function patch(int $id, array $data, ?int $ownerId = null, ?string $ownerColumn = null): ?array
     {
-        return $this->update($id, $data);
+        return $this->update($id, $data, $ownerId, $ownerColumn);
     }
 
     /** @param array<string, mixed> $data @return array<int, string> */

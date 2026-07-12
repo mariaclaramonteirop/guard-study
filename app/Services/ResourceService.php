@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Dao\Contracts\ResourceDaoInterface;
 use App\Exceptions\NotFoundException;
 use App\Exceptions\ValidationException;
+use App\Security\UserContext;
 
 final class ResourceService
 {
@@ -15,49 +16,72 @@ final class ResourceService
         private readonly ResourceDaoInterface $dao,
         private readonly string $resourceName,
         private readonly array $requiredFields,
+        private readonly ?string $ownerColumn = 'user_id',
     ) {
     }
 
     /** @return array<int, array<string, mixed>> */
-    public function all(): array
+    public function all(?UserContext $userContext = null): array
     {
-        return $this->dao->all();
+        return $this->dao->all($this->ownerId($userContext), $this->ownerColumnFor($userContext));
     }
 
     /** @return array<string, mixed> */
-    public function find(int $id): array
+    public function find(int $id, ?UserContext $userContext = null): array
     {
-        return $this->dao->find($id) ?? throw new NotFoundException("{$this->resourceName} nao encontrado.");
+        return $this->dao->find($id, $this->ownerId($userContext), $this->ownerColumnFor($userContext)) ?? throw new NotFoundException("{$this->resourceName} nao encontrado.");
     }
 
     /** @param array<string, mixed> $data @return array<string, mixed> */
-    public function create(array $data): array
+    public function create(array $data, ?UserContext $userContext = null): array
     {
         $this->validate($data);
-        return $this->dao->create($this->normalize($data));
+        $normalized = $this->normalize($data);
+        if ($this->ownerColumn !== null && $userContext !== null) {
+            $normalized[$this->ownerColumn] = $userContext->id;
+        }
+        return $this->dao->create($normalized);
     }
 
     /** @param array<string, mixed> $data @return array<string, mixed> */
-    public function update(int $id, array $data): array
+    public function update(int $id, array $data, ?UserContext $userContext = null): array
     {
-        $this->find($id);
+        $this->find($id, $userContext);
         $this->validate($data);
-        return $this->dao->update($id, $this->normalize($data)) ?? throw new NotFoundException("{$this->resourceName} nao encontrado.");
+        return $this->dao->update($id, $this->normalize($data), $this->ownerId($userContext), $this->ownerColumnFor($userContext)) ?? throw new NotFoundException("{$this->resourceName} nao encontrado.");
     }
 
-    public function delete(int $id): void
+    public function delete(int $id, ?UserContext $userContext = null): void
     {
-        $this->find($id);
-        if (!$this->dao->delete($id)) {
+        $this->find($id, $userContext);
+        if (!$this->dao->delete($id, $this->ownerId($userContext), $this->ownerColumnFor($userContext))) {
             throw new NotFoundException("{$this->resourceName} nao encontrado.");
         }
     }
 
     /** @param array<string, mixed> $data @return array<string, mixed> */
-    public function patch(int $id, array $data): array
+    public function patch(int $id, array $data, ?UserContext $userContext = null): array
     {
-        $this->find($id);
-        return $this->dao->patch($id, $this->normalize($data)) ?? throw new NotFoundException("{$this->resourceName} nao encontrado.");
+        $this->find($id, $userContext);
+        return $this->dao->patch($id, $this->normalize($data), $this->ownerId($userContext), $this->ownerColumnFor($userContext)) ?? throw new NotFoundException("{$this->resourceName} nao encontrado.");
+    }
+
+    private function ownerId(?UserContext $userContext): ?int
+    {
+        if ($this->ownerColumn === null || $userContext === null || $userContext->isManager()) {
+            return null;
+        }
+
+        return $userContext->id;
+    }
+
+    private function ownerColumnFor(?UserContext $userContext): ?string
+    {
+        if ($this->ownerColumn === null || $userContext === null || $userContext->isManager()) {
+            return null;
+        }
+
+        return $this->ownerColumn;
     }
 
     /** @param array<string, mixed> $data */

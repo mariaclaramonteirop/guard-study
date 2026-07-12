@@ -63,3 +63,18 @@ export type ReviewSchedule = {
   notes: string | null;
   completed_at: string | null;
 };
+
+export type ChecklistItem = {
+  id: number;
+  study_log_id: number;
+  title: string;
+  is_completed: number;
+};
+
+export type User = {
+  id: number;
+  name: string;
+  email: string;
+  role: 'admin' | 'manager' | 'user';
+  password?: string;
+};

@@ -1,4 +1,5 @@
 import type { ApiResponse } from '../types';
+import { getSessionUser } from './session';
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
 
@@ -8,10 +9,15 @@ type RequestOptions = {
 };
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const user = getSessionUser();
   const response = await fetch(`${API_URL}${path}`, {
     method: options.method ?? 'GET',
     headers: {
       'Content-Type': 'application/json',
+      ...(user ? {
+        'X-Current-User-Id': String(user.id),
+        'X-Current-User-Role': user.role,
+      } : {}),
     },
     body: options.body ? JSON.stringify(options.body) : undefined,
   });
