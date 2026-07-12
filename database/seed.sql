@@ -36,9 +36,9 @@ INSERT INTO study_goals (user_id, project_id, title, description, target_minutes
 (2, 1, 'Completar 300 minutos em PHP', 'Focar em POO, Slim e repositorios até completar a meta.', 300, 6, 'Pausa especial de 1 hora', 50, 'active', NULL, 'Meta pessoal de curto prazo.'),
 (2, NULL, 'Ler 4 artigos de arquitetura', 'Meta sem projeto para revisar fundamentos.', 180, 4, 'Capitulo extra de leitura', 30, 'paused', NULL, 'Pode ser retomada depois.');
 
-INSERT INTO rewards (user_id, goal_id, title, description, points, kind, status, unlocked_at, claimed_at, notes) VALUES
-(2, 1, 'Bingo do PHP', 'Liberado quando bater a meta principal de PHP.', 50, 'badge', 'locked', NULL, NULL, 'Recompensa vinculada à meta principal.'),
-(2, NULL, 'Fim de semana livre', 'Recompensa pessoal depois de uma semana consistente.', 20, 'bonus', 'unlocked', '2026-07-10 10:00:00', NULL, 'Pendente de resgate.');
+INSERT INTO rewards (user_id, goal_id, title, description, points, kind, category, image_url, badge_key, status, unlocked_at, claimed_at, notes) VALUES
+(2, 1, 'Bingo do PHP', 'Liberado quando bater a meta principal de PHP.', 50, 'badge', 'metas', NULL, 'meta_cumprida', 'locked', NULL, NULL, 'Recompensa vinculada à meta principal.'),
+(2, NULL, 'Fim de semana livre', 'Recompensa pessoal depois de uma semana consistente.', 20, 'bonus', 'constancia', NULL, 'semana_consistente', 'unlocked', '2026-07-10 10:00:00', NULL, 'Pendente de resgate.');
 
 INSERT INTO checklist_items (user_id, study_log_id, title, is_completed) VALUES
 (2, 1, 'Ler resumao da aula', 1),

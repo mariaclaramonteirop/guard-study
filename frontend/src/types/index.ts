@@ -144,6 +144,9 @@ export type Reward = {
   description: string | null;
   points: number;
   kind: 'badge' | 'bonus' | 'streak' | 'custom';
+  category: string;
+  image_url: string | null;
+  badge_key: string | null;
   status: 'locked' | 'unlocked' | 'claimed';
   unlocked_at: string | null;
   claimed_at: string | null;
