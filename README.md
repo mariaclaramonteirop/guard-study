@@ -1,114 +1,137 @@
 # Guard Study
 
-Meu checkpoint de aprendizado para revisar, praticar e consolidar Programação para Web com PHP.
+API REST e front-end para registrar estudos de programacao, acompanhar checkpoints, revisar erros e organizar evolucao por topicos.
 
-Este repositório nasceu como um plano de retomada: estudar com método, registrar progresso, transformar erros em revisão e construir pequenos projetos para fixar cada conteúdo.
+## Stack
 
-## Objetivo
-
-Dominar os principais conteúdos de PHP para Programação para Web:
-
-- Base da linguagem PHP
-- Arrays
-- Unicode e strings
-- Programação Orientada a Objetos
-- Tratamento de exceções
-- Banco de dados com PDO
-- HTTP
-- Geração de conteúdo
-- REST e APIs RESTful
-- MVC
-
-## Método
-
-Cada tema possui:
-
-- resumo;
-- exemplos;
-- exercícios;
-- mini projeto;
-- checkpoint;
-- registro de erros.
-
-A ideia é estudar com prática, não apenas ler material.
+- Back-end: PHP 8, Slim 4, PDO, MySQL, Composer
+- Arquitetura: MVC + DAO + Service
+- Front-end: React, TypeScript, Vite, Tailwind CSS, React Router
+- Infra: Docker, docker-compose, migrations SQL e GitHub Actions
 
 ## Estrutura
 
 ```txt
 guard-study/
-├── 00-diagnostico/
-├── 01-base-php/
-├── 02-arrays-strings-unicode/
-├── 03-poo/
-├── 04-excecoes/
-├── 05-pdo-banco-dados/
-├── 06-http-geracao-conteudo/
-├── 07-rest-mvc/
-├── projetos/
-├── simulados/
-└── caderno-de-erros/
+├── app/
+│   ├── Controllers/
+│   ├── Dao/
+│   │   ├── Contracts/
+│   │   └── Pdo/
+│   ├── Database/
+│   ├── Exceptions/
+│   ├── Models/
+│   ├── Services/
+│   └── Views/
+├── database/
+│   ├── migrations/
+│   ├── schema.sql
+│   └── seed.sql
+├── docs/
+├── frontend/
+├── public/
+├── scripts/
+├── studies/
+├── docker-compose.yml
+└── composer.json
 ```
 
-## Cronograma
+## Separacao entre sistema e estudos reais
 
-| Semana | Tema | Projeto |
-|---|---|---|
-| 1 | Base PHP | Laboratório PHP |
-| 2 | Arrays, Strings e Unicode | Manipulador de textos |
-| 3 | POO | Agenda POO |
-| 4 | Exceções | Agenda com exceções |
-| 5 | PDO e Banco de Dados | Lista de tarefas |
-| 6 | HTTP e geração de conteúdo | Endpoints PHP puro |
-| 7 | REST e MVC | API de fornecedores |
-| 8 | Revisão final | Simulado final |
+- `app/`, `public/`, `database/`, `frontend/`, `docs/` e `scripts/`: codigo e documentacao tecnica do sistema Guard Study.
+- `studies/`: seus materiais reais de estudo, cronogramas, checkpoints pessoais e anotacoes.
 
-## Projetos
+Essa separacao evita misturar conteudo pessoal de aprendizado com a implementacao da API e do front-end.
 
-### Projeto 01 — Laboratório PHP
+## Rodar com Docker
 
-Prática de variáveis, tipos, operadores, condicionais, laços e funções.
-
-### Projeto 02 — Manipulador de textos
-
-Prática de arrays, strings, UTF-8 e relatórios em texto.
-
-### Projeto 03 — Agenda POO
-
-Prática de classes, objetos, encapsulamento, métodos e validações.
-
-### Projeto 04 — Lista de tarefas com PDO
-
-Prática de banco de dados, PDO, repositórios e exceções.
-
-### Projeto 05 — API RESTful de fornecedores
-
-Projeto final integrando POO, exceções, PDO, HTTP, JSON, RESTful e MVC.
-
-## Checkpoints
-
-Cada semana deve terminar com um checkpoint:
-
-```md
-## Checkpoint
-
-- O que estudei:
-- O que consegui fazer:
-- Onde travei:
-- O que preciso revisar:
+```bash
+docker compose up
 ```
 
-## Caderno de erros
+Servicos:
 
-Errar faz parte do processo, mas erro sem registro vira repetição.
+- API: `http://localhost:8080`
+- MySQL: `localhost:3307`
 
-Cada erro deve ser anotado com:
+O Docker inicializa o banco com `database/schema.sql` e `database/seed.sql`.
 
-- o que eu errei;
-- por que errei;
-- como corrigir;
-- exemplo certo;
-- como evitar de novo.
+## Rodar sem Docker
 
-## Frase-guia
+```bash
+composer install
+composer migrate
+composer start
+```
 
-> Eu já trabalho com PHP. Agora eu vou aprender exatamente o PHP que a prova cobra.
+Crie `.env` localmente quando rodar fora do Docker:
+
+```env
+APP_ENV=local
+APP_DEBUG=true
+APP_URL=http://localhost:8080
+DB_HOST=127.0.0.1
+DB_PORT=3307
+DB_DATABASE=guard_study
+DB_USERNAME=guard
+DB_PASSWORD=guard
+CORS_ALLOWED_ORIGIN=http://localhost:5173
+```
+
+## Migrations
+
+As migrations ficam em `database/migrations`.
+
+```bash
+composer migrate
+```
+
+O runner registra migrations aplicadas na tabela `migrations`.
+
+## Front-end
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Crie `frontend/.env` localmente:
+
+```env
+VITE_API_URL=http://localhost:8080
+```
+
+Front-end local: `http://localhost:5173`
+
+## Rotas
+
+Veja [docs/routes.md](docs/routes.md).
+
+## Arquitetura
+
+Veja [docs/architecture.md](docs/architecture.md).
+
+Fluxo principal:
+
+```txt
+Controller -> Service -> DAO -> PDO/MySQL -> JsonView
+```
+
+As models usam atributos privados com getters e setters para reforcar POO.
+
+## CI
+
+O workflow em `.github/workflows/ci.yml` valida:
+
+- lint dos arquivos PHP;
+- instalacao Composer;
+- build do front-end React.
+
+## Relacionamentos do MVP
+
+```txt
+Usuario -> Topicos -> Registros -> Checkpoints
+                         └──────-> Erros
+Checkpoints também podem agrupar erros relacionados.
+```

@@ -1,0 +1,21 @@
+{
+  "name": "maria/guard-study-api",
+  "description": "API REST do Guard Study para registrar estudos, checkpoints e erros.",
+  "type": "project",
+  "require": {
+    "php": "^8.1",
+    "slim/slim": "^4.14",
+    "slim/psr7": "^1.7",
+    "vlucas/phpdotenv": "^5.6"
+  },
+  "autoload": {
+    "psr-4": {
+      "App\\": "app/"
+    }
+  },
+  "scripts": {
+    "start": "php -S 0.0.0.0:8080 -t public",
+    "migrate": "php scripts/migrate.php",
+    "test": "php -l public/index.php"
+  }
+}
