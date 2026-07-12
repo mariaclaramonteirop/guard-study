@@ -1,7 +1,6 @@
-import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api/client';
-import { BADGES } from '../config/badges';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { Loading } from '../components/Loading';
 import { SectionTitle } from '../components/SectionTitle';
@@ -49,9 +48,6 @@ export function RewardForm() {
 
   const { data, loading, error } = useFetch(load);
 
-  const badgeOptions = useMemo(() => BADGES, []);
-  const selectedBadge = badgeOptions.find((badge) => badge.key === form.badge_key) ?? null;
-
   useEffect(() => {
     if (data?.reward) {
       setForm({
@@ -69,19 +65,6 @@ export function RewardForm() {
     }
   }, [data]);
 
-  function handleBadgeKeyChange(nextKey: string) {
-    const selected = badgeOptions.find((badge) => badge.key === nextKey);
-    setForm((current) => ({
-      ...current,
-      badge_key: nextKey,
-      title: selected?.title ?? current.title,
-      description: selected?.description ?? current.description,
-      category: selected?.category ?? current.category,
-      image_url: selected?.image ?? current.image_url,
-      kind: selected ? 'badge' : current.kind,
-    }));
-  }
-
   async function submit(event: FormEvent) {
     event.preventDefault();
 
@@ -97,9 +80,9 @@ export function RewardForm() {
       points: Number(form.points),
       kind: form.kind,
       category: form.category,
-      badge_key: form.badge_key || null,
+      badge_key: isEdit ? form.badge_key || null : null,
       image_url: form.image_url || null,
-      status: form.status,
+      status: isEdit ? form.status : 'locked',
       notes: form.notes || null,
     };
 
@@ -129,15 +112,6 @@ export function RewardForm() {
           ))}
         </select>
 
-        <select className="rounded border border-stone-300 px-3 py-2" value={form.badge_key} onChange={(event) => handleBadgeKeyChange(event.target.value)}>
-          <option value="">Selecionar insígnia pronta</option>
-          {badgeOptions.map((badge) => (
-            <option key={badge.key} value={badge.key}>
-              {badge.title} - {badge.category}
-            </option>
-          ))}
-        </select>
-
         <div className="grid gap-3 md:grid-cols-2">
           <input className="rounded border border-stone-300 px-3 py-2" placeholder="Titulo" value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} />
           <select className="rounded border border-stone-300 px-3 py-2" value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })}>
@@ -155,22 +129,24 @@ export function RewardForm() {
         <textarea className="min-h-24 rounded border border-stone-300 px-3 py-2" placeholder="Descricao" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
 
         <div className="rounded border border-stone-200 bg-stone-50 p-3">
-          <p className="text-xs uppercase tracking-wide text-stone-500">Preview</p>
+          <p className="text-xs uppercase tracking-wide text-stone-500">Preview da recompensa</p>
           <div className="mt-2 flex items-center gap-3">
             <div className="grid h-16 w-16 place-items-center overflow-hidden rounded-2xl border border-stone-200 bg-stone-50">
-              {selectedBadge || form.image_url ? (
+              {form.image_url ? (
                 <img
-                  src={form.image_url || selectedBadge?.image || ''}
-                  alt={form.title || selectedBadge?.title || 'Prévia da insígnia'}
+                  src={form.image_url}
+                  alt={form.title || 'Previa da recompensa'}
                   className="h-full w-full object-contain"
                 />
               ) : (
-                <span className="text-lg font-semibold text-violet-700">B</span>
+                <span className="text-lg font-semibold text-violet-700">{(form.title || 'R').slice(0, 1).toUpperCase()}</span>
               )}
             </div>
             <div className="min-w-0">
-              <p className="font-medium text-ink">{form.title || selectedBadge?.title || 'Sem título'}</p>
-              <p className="text-sm text-stone-600">{selectedBadge?.description || 'Escolha uma insígnia ou envie uma imagem.'}</p>
+              <p className="font-medium text-ink">{form.title || 'Sem título'}</p>
+              <p className="text-sm text-stone-600">
+                {isEdit ? `Status atual: ${form.status}` : 'Nova recompensa será criada bloqueada.'}
+              </p>
             </div>
           </div>
         </div>
@@ -182,11 +158,9 @@ export function RewardForm() {
             <option value="streak">Sequencia</option>
             <option value="custom">Personalizada</option>
           </select>
-          <select className="rounded border border-stone-300 px-3 py-2" value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value as FormState['status'] })}>
-            <option value="locked">Bloqueada</option>
-            <option value="unlocked">Desbloqueada</option>
-            <option value="claimed">Resgatada</option>
-          </select>
+          <div className="rounded border border-stone-200 bg-stone-50 px-3 py-2 text-sm text-stone-600">
+            Status: {isEdit ? form.status : 'locked'}
+          </div>
         </div>
 
         <div className="grid gap-3 md:grid-cols-2">
