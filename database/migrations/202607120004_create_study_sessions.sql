@@ -1,0 +1,21 @@
+CREATE TABLE IF NOT EXISTS study_sessions (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id INT UNSIGNED NULL,
+  project_id INT UNSIGNED NULL,
+  topic_id INT UNSIGNED NULL,
+  study_log_id INT UNSIGNED NULL,
+  title VARCHAR(160) NOT NULL,
+  timer_mode VARCHAR(30) NOT NULL DEFAULT 'pomodoro',
+  planned_minutes INT UNSIGNED NOT NULL,
+  actual_minutes INT UNSIGNED NOT NULL DEFAULT 0,
+  status ENUM('running', 'paused', 'completed', 'cancelled') NOT NULL DEFAULT 'running',
+  started_at DATETIME NOT NULL,
+  ended_at DATETIME NULL,
+  notes TEXT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_study_sessions_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+  CONSTRAINT fk_study_sessions_project FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE SET NULL,
+  CONSTRAINT fk_study_sessions_topic FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE SET NULL,
+  CONSTRAINT fk_study_sessions_study_log FOREIGN KEY (study_log_id) REFERENCES study_logs(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

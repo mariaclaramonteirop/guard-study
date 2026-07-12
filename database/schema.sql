@@ -8,20 +8,37 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS projects (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id INT UNSIGNED NULL,
+  name VARCHAR(160) NOT NULL,
+  description TEXT NULL,
+  repository_url VARCHAR(255) NULL,
+  project_url VARCHAR(255) NULL,
+  notes TEXT NULL,
+  status VARCHAR(30) NOT NULL DEFAULT 'ativo',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_projects_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS topics (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_id INT UNSIGNED NULL,
+  project_id INT UNSIGNED NULL,
   name VARCHAR(120) NOT NULL,
   description TEXT NULL,
   status VARCHAR(30) NOT NULL DEFAULT 'ativo',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  CONSTRAINT fk_topics_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+  CONSTRAINT fk_topics_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+  CONSTRAINT fk_topics_project FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS study_logs (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_id INT UNSIGNED NULL,
+  project_id INT UNSIGNED NULL,
   topic_id INT UNSIGNED NOT NULL,
   title VARCHAR(160) NOT NULL,
   content TEXT NOT NULL,
@@ -30,14 +47,18 @@ CREATE TABLE IF NOT EXISTS study_logs (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT fk_study_logs_topic FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE CASCADE,
-  CONSTRAINT fk_study_logs_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+  CONSTRAINT fk_study_logs_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+  CONSTRAINT fk_study_logs_project FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS checkpoints (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_id INT UNSIGNED NULL,
+  project_id INT UNSIGNED NULL,
   topic_id INT UNSIGNED NULL,
   study_log_id INT UNSIGNED NOT NULL,
+  mistake_id INT UNSIGNED NULL,
+  review_schedule_id INT UNSIGNED NULL,
   title VARCHAR(160) NOT NULL,
   description TEXT NULL,
   is_completed TINYINT(1) NOT NULL DEFAULT 0,
@@ -46,12 +67,15 @@ CREATE TABLE IF NOT EXISTS checkpoints (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT fk_checkpoints_topic FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE SET NULL,
   CONSTRAINT fk_checkpoints_study_log FOREIGN KEY (study_log_id) REFERENCES study_logs(id) ON DELETE CASCADE,
-  CONSTRAINT fk_checkpoints_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+  CONSTRAINT fk_checkpoints_mistake FOREIGN KEY (mistake_id) REFERENCES mistakes(id) ON DELETE SET NULL,
+  CONSTRAINT fk_checkpoints_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+  CONSTRAINT fk_checkpoints_project FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS mistakes (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_id INT UNSIGNED NULL,
+  project_id INT UNSIGNED NULL,
   study_log_id INT UNSIGNED NOT NULL,
   checkpoint_id INT UNSIGNED NULL,
   title VARCHAR(160) NOT NULL,
@@ -63,12 +87,14 @@ CREATE TABLE IF NOT EXISTS mistakes (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT fk_mistakes_study_log FOREIGN KEY (study_log_id) REFERENCES study_logs(id) ON DELETE CASCADE,
   CONSTRAINT fk_mistakes_checkpoint FOREIGN KEY (checkpoint_id) REFERENCES checkpoints(id) ON DELETE CASCADE,
-  CONSTRAINT fk_mistakes_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+  CONSTRAINT fk_mistakes_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+  CONSTRAINT fk_mistakes_project FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS review_schedules (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_id INT UNSIGNED NULL,
+  project_id INT UNSIGNED NULL,
   study_log_id INT UNSIGNED NOT NULL,
   checkpoint_id INT UNSIGNED NULL,
   mistake_id INT UNSIGNED NULL,
@@ -80,9 +106,32 @@ CREATE TABLE IF NOT EXISTS review_schedules (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT fk_review_schedules_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+  CONSTRAINT fk_review_schedules_project FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE SET NULL,
   CONSTRAINT fk_review_schedules_study_log FOREIGN KEY (study_log_id) REFERENCES study_logs(id) ON DELETE CASCADE,
   CONSTRAINT fk_review_schedules_checkpoint FOREIGN KEY (checkpoint_id) REFERENCES checkpoints(id) ON DELETE SET NULL,
   CONSTRAINT fk_review_schedules_mistake FOREIGN KEY (mistake_id) REFERENCES mistakes(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS study_sessions (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id INT UNSIGNED NULL,
+  project_id INT UNSIGNED NULL,
+  topic_id INT UNSIGNED NULL,
+  study_log_id INT UNSIGNED NULL,
+  title VARCHAR(160) NOT NULL,
+  timer_mode VARCHAR(30) NOT NULL DEFAULT 'pomodoro',
+  planned_minutes INT UNSIGNED NOT NULL,
+  actual_minutes INT UNSIGNED NOT NULL DEFAULT 0,
+  status ENUM('running', 'paused', 'completed', 'cancelled') NOT NULL DEFAULT 'running',
+  started_at DATETIME NOT NULL,
+  ended_at DATETIME NULL,
+  notes TEXT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_study_sessions_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+  CONSTRAINT fk_study_sessions_project FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE SET NULL,
+  CONSTRAINT fk_study_sessions_topic FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE SET NULL,
+  CONSTRAINT fk_study_sessions_study_log FOREIGN KEY (study_log_id) REFERENCES study_logs(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS checklist_items (
@@ -96,3 +145,6 @@ CREATE TABLE IF NOT EXISTS checklist_items (
   CONSTRAINT fk_checklist_items_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
   CONSTRAINT fk_checklist_items_study_log FOREIGN KEY (study_log_id) REFERENCES study_logs(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE checkpoints
+  ADD CONSTRAINT fk_checkpoints_review_schedule FOREIGN KEY (review_schedule_id) REFERENCES review_schedules(id) ON DELETE SET NULL;

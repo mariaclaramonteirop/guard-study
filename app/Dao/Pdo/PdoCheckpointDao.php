@@ -11,6 +11,16 @@ final class PdoCheckpointDao extends AbstractPdoDao implements CheckpointDaoInte
 {
     public function __construct(PDO $pdo)
     {
-        parent::__construct($pdo, 'checkpoints', ['topic_id', 'study_log_id', 'title', 'description', 'is_completed', 'completed_at']);
+        parent::__construct($pdo, 'checkpoints', [
+            'project_id',
+            'topic_id',
+            'study_log_id',
+            'mistake_id',
+            'review_schedule_id',
+            'title',
+            'description',
+            'is_completed',
+            'completed_at',
+        ]);
     }
 }

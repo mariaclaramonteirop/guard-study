@@ -6,8 +6,10 @@ use App\Controllers\ResourceController;
 use App\Controllers\AuthController;
 use App\Dao\Pdo\PdoCheckpointDao;
 use App\Dao\Pdo\PdoChecklistItemDao;
+use App\Dao\Pdo\PdoProjectDao;
 use App\Dao\Pdo\PdoMistakeDao;
 use App\Dao\Pdo\PdoReviewScheduleDao;
+use App\Dao\Pdo\PdoStudySessionDao;
 use App\Dao\Pdo\PdoStudyLogDao;
 use App\Dao\Pdo\PdoTopicDao;
 use App\Dao\Pdo\PdoUserDao;
@@ -82,6 +84,8 @@ $errorMiddleware->setDefaultErrorHandler(function (
 $pdo = Connection::get();
 
 $topics = new ResourceController(new ResourceService(new PdoTopicDao($pdo), 'Topico', ['name']));
+$projects = new ResourceController(new ResourceService(new PdoProjectDao($pdo), 'Projeto', ['name']));
+$studySessions = new ResourceController(new ResourceService(new PdoStudySessionDao($pdo), 'Sessao de estudo', ['title', 'timer_mode', 'planned_minutes', 'started_at']));
 $studyLogs = new ResourceController(new ResourceService(new PdoStudyLogDao($pdo), 'Registro de estudo', ['topic_id', 'title', 'content', 'duration_minutes', 'studied_at']));
 $checkpoints = new ResourceController(new ResourceService(new PdoCheckpointDao($pdo), 'Checkpoint', ['study_log_id', 'title']));
 $checklistItems = new ResourceController(new ResourceService(new PdoChecklistItemDao($pdo), 'Checklist', ['study_log_id', 'title']));
@@ -97,6 +101,8 @@ $app->get('/', fn (Request $request, Response $response): Response => JsonView::
 
 foreach ([
     '/topics' => $topics,
+    '/projects' => $projects,
+    '/study-sessions' => $studySessions,
     '/study-logs' => $studyLogs,
     '/checkpoints' => $checkpoints,
     '/checklists' => $checklistItems,

@@ -8,7 +8,11 @@ final class Checkpoint
 {
     public function __construct(
         private ?int $id,
-        private int $topicId,
+        private ?int $projectId,
+        private ?int $topicId,
+        private int $studyLogId,
+        private ?int $mistakeId,
+        private ?int $reviewScheduleId,
         private string $title,
         private ?string $description,
         private bool $isCompleted,
@@ -26,14 +30,54 @@ final class Checkpoint
         $this->id = $id;
     }
 
-    public function getTopicId(): int
+    public function getProjectId(): ?int
+    {
+        return $this->projectId;
+    }
+
+    public function setProjectId(?int $projectId): void
+    {
+        $this->projectId = $projectId;
+    }
+
+    public function getTopicId(): ?int
     {
         return $this->topicId;
     }
 
-    public function setTopicId(int $topicId): void
+    public function setTopicId(?int $topicId): void
     {
         $this->topicId = $topicId;
+    }
+
+    public function getStudyLogId(): int
+    {
+        return $this->studyLogId;
+    }
+
+    public function setStudyLogId(int $studyLogId): void
+    {
+        $this->studyLogId = $studyLogId;
+    }
+
+    public function getMistakeId(): ?int
+    {
+        return $this->mistakeId;
+    }
+
+    public function setMistakeId(?int $mistakeId): void
+    {
+        $this->mistakeId = $mistakeId;
+    }
+
+    public function getReviewScheduleId(): ?int
+    {
+        return $this->reviewScheduleId;
+    }
+
+    public function setReviewScheduleId(?int $reviewScheduleId): void
+    {
+        $this->reviewScheduleId = $reviewScheduleId;
     }
 
     public function getTitle(): string
