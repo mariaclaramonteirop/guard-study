@@ -33,7 +33,7 @@ export function Dashboard() {
       {error && <ErrorMessage message={error} />}
       {data && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard label="Topicos" value={data.topics} tone="green" />
+          <StatCard label="Topicos" value={data.topics} tone="violet" />
           <StatCard label="Registros" value={data.studyLogs} />
           <StatCard label="Checkpoints abertos" value={data.checkpointsOpen} tone="amber" />
           <StatCard label="Erros para revisar" value={data.mistakesToReview} tone="amber" />

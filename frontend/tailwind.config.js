@@ -5,7 +5,7 @@ export default {
     extend: {
       colors: {
         ink: '#17212b',
-        guard: '#1f7a5c',
+        guard: '#6d28d9',
         amber: '#d97706',
         paper: '#f7f3ea',
       },

@@ -1,11 +1,11 @@
 type Props = {
   label: string;
   value: number;
-  tone?: 'green' | 'amber' | 'stone';
+  tone?: 'violet' | 'amber' | 'stone';
 };
 
 const tones = {
-  green: 'border-guard/30 bg-green-50 text-guard',
+  violet: 'border-violet-300 bg-violet-50 text-violet-950',
   amber: 'border-amber/30 bg-amber-50 text-amber',
   stone: 'border-stone-200 bg-white text-ink',
 };
