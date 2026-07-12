@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { api } from '../api/client';
 import { EmptyState } from '../components/EmptyState';
 import { ErrorMessage } from '../components/ErrorMessage';
+import { MarkdownPreview } from '../components/MarkdownPreview';
 import { Loading } from '../components/Loading';
 import { SectionTitle } from '../components/SectionTitle';
 import { useFetch } from '../hooks/useFetch';
@@ -43,7 +44,11 @@ export function ReviewSchedules() {
               <div>
                 <p className="text-sm text-stone-500">{review.scheduled_for}</p>
                 <h3 className="font-semibold text-ink">{review.title}</h3>
-                <p className="mt-1 text-sm text-stone-600">{review.notes || 'Sem notas.'}</p>
+                {review.notes ? (
+                  <MarkdownPreview content={review.notes} className="mt-1 text-sm text-stone-600" />
+                ) : (
+                  <p className="mt-1 text-sm text-stone-600">Sem notas.</p>
+                )}
                 <p className="mt-2 text-xs text-stone-500">
                   Registro #{review.study_log_id}
                   {review.checkpoint_id ? ` - Checkpoint #${review.checkpoint_id}` : ''}

@@ -1,7 +1,9 @@
-import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api/client';
 import { ErrorMessage } from '../components/ErrorMessage';
+import { MarkdownPreview } from '../components/MarkdownPreview';
+import { MarkdownToolbar } from '../components/MarkdownToolbar';
 import { Loading } from '../components/Loading';
 import { SectionTitle } from '../components/SectionTitle';
 import { useFetch } from '../hooks/useFetch';
@@ -18,6 +20,7 @@ export function ReviewScheduleForm() {
   }, []);
   const [form, setForm] = useState({ study_log_id: '', checkpoint_id: '', mistake_id: '', title: '', scheduled_for: tomorrow, status: 'pending', notes: '' });
   const [formError, setFormError] = useState('');
+  const notesRef = useRef<HTMLTextAreaElement | null>(null);
   const load = useCallback(async () => {
     const [logs, checkpoints, mistakes, review] = await Promise.all([
       api.get<StudyLog[]>('/study-logs'),
@@ -61,6 +64,60 @@ export function ReviewScheduleForm() {
     navigate('/review-schedules');
   }
 
+  function applyMarkdown(command: 'h1' | 'h2' | 'bold' | 'italic' | 'list' | 'quote' | 'code') {
+    const textarea = notesRef.current;
+    if (!textarea) return;
+
+    const currentValue = form.notes;
+    const start = textarea.selectionStart ?? currentValue.length;
+    const end = textarea.selectionEnd ?? currentValue.length;
+    const selected = currentValue.slice(start, end);
+    let nextValue = currentValue;
+    let nextCursor = end;
+
+    const insert = (prefix: string, suffix = '') => {
+      const value = `${prefix}${selected || ''}${suffix}`;
+      nextValue = `${currentValue.slice(0, start)}${value}${currentValue.slice(end)}`;
+      nextCursor = start + value.length;
+    };
+
+    const prefixLines = (prefix: string) => {
+      const value = (selected || textarea.value).split('\n').map((line) => `${prefix}${line}`).join('\n');
+      nextValue = `${currentValue.slice(0, start)}${value}${currentValue.slice(end)}`;
+      nextCursor = start + value.length;
+    };
+
+    switch (command) {
+      case 'h1':
+        insert('# ');
+        break;
+      case 'h2':
+        insert('## ');
+        break;
+      case 'bold':
+        insert('**', '**');
+        break;
+      case 'italic':
+        insert('*', '*');
+        break;
+      case 'list':
+        prefixLines('- ');
+        break;
+      case 'quote':
+        prefixLines('> ');
+        break;
+      case 'code':
+        insert('`', '`');
+        break;
+    }
+
+    setForm({ ...form, notes: nextValue });
+    requestAnimationFrame(() => {
+      textarea.focus();
+      textarea.setSelectionRange(nextCursor, nextCursor);
+    });
+  }
+
   return (
     <>
       <Link to="/review-schedules" className="mb-4 inline-block text-sm text-guard">Voltar</Link>
@@ -86,7 +143,18 @@ export function ReviewScheduleForm() {
           <option value="pending">Pendente</option>
           <option value="done">Concluida</option>
         </select>
-        <textarea className="min-h-32 rounded border border-stone-300 px-3 py-2" placeholder="Notas" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} />
+        <MarkdownToolbar onApply={applyMarkdown} />
+        <textarea
+          ref={notesRef}
+          className="min-h-32 rounded border border-stone-300 px-3 py-2"
+          placeholder="Notas"
+          value={form.notes}
+          onChange={(event) => setForm({ ...form, notes: event.target.value })}
+        />
+        <section className="rounded border border-stone-200 bg-stone-50 p-3">
+          <p className="mb-2 text-xs uppercase tracking-wide text-stone-500">Preview das notas</p>
+          <MarkdownPreview content={form.notes || 'Escreva as notas para ver o preview.'} className="prose prose-stone max-w-none text-sm text-stone-700" />
+        </section>
         {formError && <p className="text-sm text-red-700">{formError}</p>}
         <button className="w-fit rounded bg-guard px-4 py-2 font-medium text-white">Salvar</button>
       </form>

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { api } from '../api/client';
 import { EmptyState } from '../components/EmptyState';
 import { ErrorMessage } from '../components/ErrorMessage';
+import { MarkdownPreview } from '../components/MarkdownPreview';
 import { Loading } from '../components/Loading';
 import { SectionTitle } from '../components/SectionTitle';
 import { useFetch } from '../hooks/useFetch';
@@ -38,7 +39,7 @@ export function StudyLogs() {
             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
               <div>
                 <h3 className="font-semibold">{log.title}</h3>
-                <p className="text-sm text-stone-600">{preview(log.content)}</p>
+                <MarkdownPreview content={preview(log.content)} className="mt-1 text-sm text-stone-600" />
                 <p className="mt-2 text-xs text-stone-500">{log.duration_minutes} min em {log.studied_at} - Topico #{log.topic_id}</p>
               </div>
               <div className="flex flex-wrap gap-2">

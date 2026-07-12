@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
 import { api } from '../api/client';
 import { ErrorMessage } from '../components/ErrorMessage';
+import { MarkdownPreview } from '../components/MarkdownPreview';
 import { Loading } from '../components/Loading';
 import { SectionTitle } from '../components/SectionTitle';
 import { useFetch } from '../hooks/useFetch';
@@ -21,11 +22,11 @@ export function MistakeDetail() {
           <article className="grid gap-4 rounded border border-stone-200 bg-white p-5">
             <section>
               <h3 className="text-sm font-semibold text-ink">O que aconteceu</h3>
-              <p className="mt-2 whitespace-pre-wrap text-stone-700">{data.description}</p>
+              <MarkdownPreview content={data.description} className="prose prose-stone mt-2 max-w-none text-stone-700" />
             </section>
             <section>
               <h3 className="text-sm font-semibold text-ink">Como corrigir</h3>
-              <p className="mt-2 whitespace-pre-wrap text-guard">{data.correction}</p>
+              <MarkdownPreview content={data.correction} className="prose prose-stone mt-2 max-w-none text-guard" />
             </section>
             <div className="flex flex-wrap gap-2 text-sm text-stone-600">
               <span className="rounded bg-stone-100 px-2 py-1">Registro #{data.study_log_id}</span>

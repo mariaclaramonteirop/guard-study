@@ -2,6 +2,7 @@ import { FormEvent, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api } from '../api/client';
 import { ErrorMessage } from '../components/ErrorMessage';
+import { MarkdownPreview } from '../components/MarkdownPreview';
 import { Loading } from '../components/Loading';
 import { SectionTitle } from '../components/SectionTitle';
 import { useFetch } from '../hooks/useFetch';
@@ -49,7 +50,7 @@ export function StudyLogDetail() {
               <span className="rounded bg-stone-100 px-2 py-1">{data.log.studied_at}</span>
               <span className="rounded bg-stone-100 px-2 py-1">{data.log.duration_minutes} minutos</span>
             </div>
-            <p className="whitespace-pre-wrap text-stone-700">{data.log.content}</p>
+            <MarkdownPreview content={data.log.content} className="prose prose-stone max-w-none text-stone-700" />
           </article>
 
           <article className="mt-6 rounded border border-stone-200 bg-white p-5">

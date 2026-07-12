@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { api } from '../api/client';
 import { EmptyState } from '../components/EmptyState';
 import { ErrorMessage } from '../components/ErrorMessage';
+import { MarkdownPreview } from '../components/MarkdownPreview';
 import { Loading } from '../components/Loading';
 import { SectionTitle } from '../components/SectionTitle';
 import { useFetch } from '../hooks/useFetch';
@@ -43,8 +44,8 @@ export function Mistakes() {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h3 className="font-semibold">{mistake.title}</h3>
-                <p className="mt-1 text-sm text-stone-600">{preview(mistake.description)}</p>
-                <p className="mt-2 text-sm text-guard">{preview(mistake.correction)}</p>
+                <MarkdownPreview content={preview(mistake.description)} className="mt-1 text-sm text-stone-600" />
+                <MarkdownPreview content={preview(mistake.correction)} className="mt-2 text-sm text-guard" />
                 <p className="mt-2 text-xs text-stone-500">Registro #{mistake.study_log_id}{mistake.checkpoint_id ? ` - Checkpoint #${mistake.checkpoint_id}` : ''}</p>
               </div>
               <div className="flex flex-wrap gap-2">

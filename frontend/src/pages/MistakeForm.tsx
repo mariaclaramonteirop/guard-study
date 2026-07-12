@@ -1,7 +1,9 @@
-import { FormEvent, useCallback, useEffect, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api/client';
 import { ErrorMessage } from '../components/ErrorMessage';
+import { MarkdownPreview } from '../components/MarkdownPreview';
+import { MarkdownToolbar } from '../components/MarkdownToolbar';
 import { Loading } from '../components/Loading';
 import { SectionTitle } from '../components/SectionTitle';
 import { useFetch } from '../hooks/useFetch';
@@ -13,6 +15,8 @@ export function MistakeForm() {
   const isEdit = Boolean(id);
   const [form, setForm] = useState({ study_log_id: '', checkpoint_id: '', title: '', description: '', correction: '' });
   const [formError, setFormError] = useState('');
+  const descriptionRef = useRef<HTMLTextAreaElement | null>(null);
+  const correctionRef = useRef<HTMLTextAreaElement | null>(null);
   const load = useCallback(async () => {
     const [logs, checkpoints, mistake] = await Promise.all([
       api.get<StudyLog[]>('/study-logs'),
@@ -47,6 +51,63 @@ export function MistakeForm() {
     navigate('/mistakes');
   }
 
+  function applyMarkdown(
+    command: 'h1' | 'h2' | 'bold' | 'italic' | 'list' | 'quote' | 'code',
+    field: 'description' | 'correction',
+  ) {
+    const textarea = field === 'description' ? descriptionRef.current : correctionRef.current;
+    if (!textarea) return;
+
+    const currentValue = form[field];
+    const start = textarea.selectionStart ?? currentValue.length;
+    const end = textarea.selectionEnd ?? currentValue.length;
+    const selected = currentValue.slice(start, end);
+    let nextValue = currentValue;
+    let nextCursor = end;
+
+    const insert = (prefix: string, suffix = '') => {
+      const value = `${prefix}${selected || ''}${suffix}`;
+      nextValue = `${currentValue.slice(0, start)}${value}${currentValue.slice(end)}`;
+      nextCursor = start + value.length;
+    };
+
+    const prefixLines = (prefix: string) => {
+      const value = (selected || textarea.value).split('\n').map((line) => `${prefix}${line}`).join('\n');
+      nextValue = `${currentValue.slice(0, start)}${value}${currentValue.slice(end)}`;
+      nextCursor = start + value.length;
+    };
+
+    switch (command) {
+      case 'h1':
+        insert('# ');
+        break;
+      case 'h2':
+        insert('## ');
+        break;
+      case 'bold':
+        insert('**', '**');
+        break;
+      case 'italic':
+        insert('*', '*');
+        break;
+      case 'list':
+        prefixLines('- ');
+        break;
+      case 'quote':
+        prefixLines('> ');
+        break;
+      case 'code':
+        insert('`', '`');
+        break;
+    }
+
+    setForm({ ...form, [field]: nextValue });
+    requestAnimationFrame(() => {
+      textarea.focus();
+      textarea.setSelectionRange(nextCursor, nextCursor);
+    });
+  }
+
   return (
     <>
       <Link to="/mistakes" className="mb-4 inline-block text-sm text-guard">Voltar</Link>
@@ -63,8 +124,30 @@ export function MistakeForm() {
           {data?.checkpoints.filter((checkpoint) => !form.study_log_id || checkpoint.study_log_id === Number(form.study_log_id)).map((checkpoint) => <option key={checkpoint.id} value={checkpoint.id}>{checkpoint.title}</option>)}
         </select>
         <input className="rounded border border-stone-300 px-3 py-2" placeholder="Titulo" value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} />
-        <textarea className="min-h-32 rounded border border-stone-300 px-3 py-2" placeholder="O que aconteceu" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
-        <textarea className="min-h-32 rounded border border-stone-300 px-3 py-2" placeholder="Como corrigir" value={form.correction} onChange={(event) => setForm({ ...form, correction: event.target.value })} />
+        <MarkdownToolbar onApply={(command) => applyMarkdown(command, 'description')} />
+        <textarea
+          ref={descriptionRef}
+          className="min-h-32 rounded border border-stone-300 px-3 py-2"
+          placeholder="O que aconteceu"
+          value={form.description}
+          onChange={(event) => setForm({ ...form, description: event.target.value })}
+        />
+        <section className="rounded border border-stone-200 bg-stone-50 p-3">
+          <p className="mb-2 text-xs uppercase tracking-wide text-stone-500">Preview do erro</p>
+          <MarkdownPreview content={form.description || 'Escreva o erro para ver o preview.'} className="prose prose-stone max-w-none text-sm text-stone-700" />
+        </section>
+        <MarkdownToolbar onApply={(command) => applyMarkdown(command, 'correction')} />
+        <textarea
+          ref={correctionRef}
+          className="min-h-32 rounded border border-stone-300 px-3 py-2"
+          placeholder="Como corrigir"
+          value={form.correction}
+          onChange={(event) => setForm({ ...form, correction: event.target.value })}
+        />
+        <section className="rounded border border-stone-200 bg-stone-50 p-3">
+          <p className="mb-2 text-xs uppercase tracking-wide text-stone-500">Preview da correção</p>
+          <MarkdownPreview content={form.correction || 'Escreva a correção para ver o preview.'} className="prose prose-stone max-w-none text-sm text-guard" />
+        </section>
         {formError && <p className="text-sm text-red-700">{formError}</p>}
         <button className="w-fit rounded bg-guard px-4 py-2 font-medium text-white">Salvar</button>
       </form>
