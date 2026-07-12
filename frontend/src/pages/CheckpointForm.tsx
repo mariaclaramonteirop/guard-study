@@ -5,33 +5,42 @@ import { ErrorMessage } from '../components/ErrorMessage';
 import { Loading } from '../components/Loading';
 import { SectionTitle } from '../components/SectionTitle';
 import { useFetch } from '../hooks/useFetch';
-import type { Checkpoint, Mistake, ReviewSchedule, StudyLog, Topic } from '../types';
+import type { Checkpoint, Mistake, Project, ReviewSchedule, StudyLog, Topic } from '../types';
 
 export function CheckpointForm() {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEdit = Boolean(id);
-  const [form, setForm] = useState({ topic_id: '', study_log_id: '', mistake_id: '', review_schedule_id: '', title: '', description: '' });
+  const [form, setForm] = useState({ project_id: '', topic_id: '', study_log_id: '', mistake_id: '', review_schedule_id: '', title: '', description: '' });
   const [formError, setFormError] = useState('');
   const load = useCallback(async () => {
-    const [topics, logs, mistakes, reviews, checkpoint] = await Promise.all([
+    const [projects, topics, logs, mistakes, reviews, checkpoint] = await Promise.allSettled([
+      api.get<Project[]>('/projects'),
       api.get<Topic[]>('/topics'),
       api.get<StudyLog[]>('/study-logs'),
       api.get<Mistake[]>('/mistakes'),
       api.get<ReviewSchedule[]>('/review-schedules'),
       isEdit ? api.get<Checkpoint>(`/checkpoints/${id}`) : Promise.resolve(null),
     ]);
-    return { topics, logs, mistakes, reviews, checkpoint };
+    return {
+      projects: projects.status === 'fulfilled' ? projects.value : [],
+      topics: topics.status === 'fulfilled' ? topics.value : [],
+      logs: logs.status === 'fulfilled' ? logs.value : [],
+      mistakes: mistakes.status === 'fulfilled' ? mistakes.value : [],
+      reviews: reviews.status === 'fulfilled' ? reviews.value : [],
+      checkpoint: checkpoint.status === 'fulfilled' ? checkpoint.value : null,
+    };
   }, [id, isEdit]);
   const { data, loading, error } = useFetch(load);
 
   useEffect(() => {
     if (data?.checkpoint) {
       setForm({
+        project_id: data.checkpoint.project_id ? String(data.checkpoint.project_id) : '',
         topic_id: data.checkpoint.topic_id ? String(data.checkpoint.topic_id) : '',
         study_log_id: String(data.checkpoint.study_log_id),
-        mistake_id: '',
-        review_schedule_id: '',
+        mistake_id: data.checkpoint.mistake_id ? String(data.checkpoint.mistake_id) : '',
+        review_schedule_id: data.checkpoint.review_schedule_id ? String(data.checkpoint.review_schedule_id) : '',
         title: data.checkpoint.title,
         description: data.checkpoint.description ?? '',
       });
@@ -40,18 +49,30 @@ export function CheckpointForm() {
 
   const filteredLogs = useMemo(() => {
     if (!data) return [];
-    return form.topic_id ? data.logs.filter((log) => log.topic_id === Number(form.topic_id)) : data.logs;
-  }, [data, form.topic_id]);
+    return data.logs.filter((log) => {
+      const topicMatches = !form.topic_id || log.topic_id === Number(form.topic_id);
+      const projectMatches = !form.project_id || log.project_id === Number(form.project_id);
+      return topicMatches && projectMatches;
+    });
+  }, [data, form.project_id, form.topic_id]);
 
   const filteredMistakes = useMemo(() => {
     if (!data) return [];
-    return form.study_log_id ? data.mistakes.filter((mistake) => mistake.study_log_id === Number(form.study_log_id)) : data.mistakes;
-  }, [data, form.study_log_id]);
+    return data.mistakes.filter((mistake) => {
+      const logMatches = !form.study_log_id || mistake.study_log_id === Number(form.study_log_id);
+      const projectMatches = !form.project_id || mistake.project_id === Number(form.project_id);
+      return logMatches && projectMatches;
+    });
+  }, [data, form.project_id, form.study_log_id]);
 
   const filteredReviews = useMemo(() => {
     if (!data) return [];
-    return form.study_log_id ? data.reviews.filter((review) => review.study_log_id === Number(form.study_log_id)) : data.reviews;
-  }, [data, form.study_log_id]);
+    return data.reviews.filter((review) => {
+      const logMatches = !form.study_log_id || review.study_log_id === Number(form.study_log_id);
+      const projectMatches = !form.project_id || review.project_id === Number(form.project_id);
+      return logMatches && projectMatches;
+    });
+  }, [data, form.project_id, form.study_log_id]);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -60,19 +81,14 @@ export function CheckpointForm() {
       return;
     }
 
-    const selectedMistake = data?.mistakes.find((mistake) => mistake.id === Number(form.mistake_id));
-    const selectedReview = data?.reviews.find((review) => review.id === Number(form.review_schedule_id));
-    const description = [
-      form.description,
-      selectedMistake ? `Erro relacionado: #${selectedMistake.id} - ${selectedMistake.title}` : '',
-      selectedReview ? `Revisao relacionada: #${selectedReview.id} - ${selectedReview.title}` : '',
-    ].filter(Boolean).join('\n');
-
     const payload = {
+      project_id: form.project_id ? Number(form.project_id) : null,
       topic_id: form.topic_id ? Number(form.topic_id) : null,
       study_log_id: Number(form.study_log_id),
+      mistake_id: form.mistake_id ? Number(form.mistake_id) : null,
+      review_schedule_id: form.review_schedule_id ? Number(form.review_schedule_id) : null,
       title: form.title,
-      description,
+      description: form.description || null,
     };
     if (isEdit) await api.put<Checkpoint>(`/checkpoints/${id}`, payload);
     else await api.post<Checkpoint>('/checkpoints', payload);
@@ -86,11 +102,15 @@ export function CheckpointForm() {
       {loading && <Loading />}
       {error && <ErrorMessage message={error} />}
       <form onSubmit={submit} className="grid gap-3 rounded border border-stone-200 bg-white p-4">
-        <select className="rounded border border-stone-300 px-3 py-2" value={form.topic_id} onChange={(event) => setForm({ ...form, topic_id: event.target.value, study_log_id: '' })}>
+        <select className="rounded border border-stone-300 px-3 py-2" value={form.project_id} onChange={(event) => setForm({ ...form, project_id: event.target.value, topic_id: '', study_log_id: '', mistake_id: '', review_schedule_id: '' })}>
+          <option value="">Projeto opcional</option>
+          {data?.projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+        </select>
+        <select className="rounded border border-stone-300 px-3 py-2" value={form.topic_id} onChange={(event) => setForm({ ...form, topic_id: event.target.value, study_log_id: '', mistake_id: '', review_schedule_id: '' })}>
           <option value="">Escolha o topico</option>
           {data?.topics.map((topic) => <option key={topic.id} value={topic.id}>{topic.name}</option>)}
         </select>
-        <select className="rounded border border-stone-300 px-3 py-2" value={form.study_log_id} onChange={(event) => setForm({ ...form, study_log_id: event.target.value })}>
+        <select className="rounded border border-stone-300 px-3 py-2" value={form.study_log_id} onChange={(event) => setForm({ ...form, study_log_id: event.target.value, mistake_id: '', review_schedule_id: '' })}>
           <option value="">Escolha o registro</option>
           {filteredLogs.map((log) => <option key={log.id} value={log.id}>{log.title}</option>)}
         </select>

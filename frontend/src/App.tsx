@@ -9,6 +9,11 @@ import { MistakeForm } from './pages/MistakeForm';
 import { Mistakes } from './pages/Mistakes';
 import { ReviewScheduleForm } from './pages/ReviewScheduleForm';
 import { ReviewSchedules } from './pages/ReviewSchedules';
+import { ProjectDetail } from './pages/ProjectDetail';
+import { ProjectForm } from './pages/ProjectForm';
+import { Projects } from './pages/Projects';
+import { StudySessionForm } from './pages/StudySessionForm';
+import { StudySessions } from './pages/StudySessions';
 import { StudyLogDetail } from './pages/StudyLogDetail';
 import { StudyLogForm } from './pages/StudyLogForm';
 import { StudyLogs } from './pages/StudyLogs';
@@ -27,6 +32,13 @@ const router = createBrowserRouter([
         element: <Layout />,
         children: [
           { index: true, element: <Dashboard /> },
+          { path: 'projects', element: <Projects /> },
+          { path: 'projects/new', element: <ProjectForm /> },
+          { path: 'projects/:id', element: <ProjectDetail /> },
+          { path: 'projects/:id/edit', element: <ProjectForm /> },
+          { path: 'study-sessions', element: <StudySessions /> },
+          { path: 'study-sessions/new', element: <StudySessions /> },
+          { path: 'study-sessions/:id/edit', element: <StudySessionForm /> },
           { path: 'topics', element: <Topics /> },
           { path: 'topics/new', element: <TopicForm /> },
           { path: 'topics/:id/edit', element: <TopicForm /> },

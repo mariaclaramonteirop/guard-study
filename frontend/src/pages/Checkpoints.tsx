@@ -52,8 +52,13 @@ export function Checkpoints() {
               <div className="absolute bottom-0 left-7 top-0 w-0.5 bg-stone-200 md:left-8 md:right-8 md:top-7 md:h-0.5 md:w-auto" />
               {data.checkpoints.map((checkpoint) => {
                 const log = data.logs.find((item) => item.id === checkpoint.study_log_id);
-                const checkpointMistakes = data.mistakes.filter((item) => item.checkpoint_id === checkpoint.id || item.study_log_id === checkpoint.study_log_id);
-                const checkpointReviews = data.reviews.filter((item) => item.checkpoint_id === checkpoint.id || item.study_log_id === checkpoint.study_log_id);
+                const topic = data.topics.find((item) => item.id === checkpoint.topic_id);
+                const checkpointMistake = data.mistakes.find((item) => item.id === checkpoint.mistake_id);
+                const checkpointReview = data.reviews.find((item) => item.id === checkpoint.review_schedule_id);
+                const fallbackMistakes = data.mistakes.filter((item) => item.checkpoint_id === checkpoint.id || item.study_log_id === checkpoint.study_log_id);
+                const fallbackReviews = data.reviews.filter((item) => item.checkpoint_id === checkpoint.id || item.study_log_id === checkpoint.study_log_id);
+                const displayedMistakes = checkpointMistake ? [checkpointMistake] : fallbackMistakes;
+                const displayedReviews = checkpointReview ? [checkpointReview] : fallbackReviews;
 
                 return (
                   <div key={checkpoint.id} className="group relative grid grid-cols-[56px_1fr] gap-3 md:flex md:flex-col md:items-center md:text-center">
@@ -73,17 +78,21 @@ export function Checkpoints() {
                       <p className="text-sm font-semibold">{checkpoint.title}</p>
                       <p className="mt-1 whitespace-pre-wrap text-xs text-stone-300">{checkpoint.description || 'Sem descricao.'}</p>
                       <div className="mt-3 border-t border-white/10 pt-3">
+                        <p className="text-xs font-semibold text-stone-200">Topico</p>
+                        <p className="mt-1 text-sm">{topic ? topic.name : 'Topico nao informado'}</p>
+                      </div>
+                      <div className="mt-3 border-t border-white/10 pt-3">
                         <p className="text-xs font-semibold text-stone-200">Registro relacionado</p>
                         <p className="mt-1 text-sm">{log ? log.title : 'Registro nao encontrado'}</p>
                         {log && <p className="mt-1 text-xs text-stone-300">{log.studied_at} - {log.duration_minutes} min</p>}
                       </div>
                       <div className="mt-3 border-t border-white/10 pt-3">
                         <p className="text-xs font-semibold text-stone-200">Erros vinculados</p>
-                        {checkpointMistakes.length === 0 ? <p className="mt-1 text-xs text-stone-300">Nenhum erro registrado.</p> : checkpointMistakes.map((mistake) => <p key={mistake.id} className="mt-1 text-xs text-stone-100">{mistake.title}</p>)}
+                        {displayedMistakes.length === 0 ? <p className="mt-1 text-xs text-stone-300">Nenhum erro registrado.</p> : displayedMistakes.map((mistake) => <p key={mistake.id} className="mt-1 text-xs text-stone-100">{mistake.title}</p>)}
                       </div>
                       <div className="mt-3 border-t border-white/10 pt-3">
                         <p className="text-xs font-semibold text-stone-200">Revisoes vinculadas</p>
-                        {checkpointReviews.length === 0 ? <p className="mt-1 text-xs text-stone-300">Nenhuma revisao agendada.</p> : checkpointReviews.map((review) => <p key={review.id} className="mt-1 text-xs text-stone-100">{review.scheduled_for} - {review.title}</p>)}
+                        {displayedReviews.length === 0 ? <p className="mt-1 text-xs text-stone-300">Nenhuma revisao agendada.</p> : displayedReviews.map((review) => <p key={review.id} className="mt-1 text-xs text-stone-100">{review.scheduled_for} - {review.title}</p>)}
                       </div>
                     </div>
                   </div>
@@ -97,8 +106,10 @@ export function Checkpoints() {
             {data.checkpoints.map((checkpoint) => {
               const log = data.logs.find((item) => item.id === checkpoint.study_log_id);
               const topic = data.topics.find((item) => item.id === checkpoint.topic_id);
-              const checkpointMistakes = data.mistakes.filter((item) => item.checkpoint_id === checkpoint.id || item.study_log_id === checkpoint.study_log_id);
-              const checkpointReviews = data.reviews.filter((item) => item.checkpoint_id === checkpoint.id || item.study_log_id === checkpoint.study_log_id);
+              const checkpointMistake = data.mistakes.find((item) => item.id === checkpoint.mistake_id);
+              const checkpointReview = data.reviews.find((item) => item.id === checkpoint.review_schedule_id);
+              const checkpointMistakes = checkpointMistake ? [checkpointMistake] : data.mistakes.filter((item) => item.checkpoint_id === checkpoint.id || item.study_log_id === checkpoint.study_log_id);
+              const checkpointReviews = checkpointReview ? [checkpointReview] : data.reviews.filter((item) => item.checkpoint_id === checkpoint.id || item.study_log_id === checkpoint.study_log_id);
 
               return (
                 <article key={`list-${checkpoint.id}`} className="rounded border border-stone-200 bg-white p-4">

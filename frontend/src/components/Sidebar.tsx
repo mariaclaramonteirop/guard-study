@@ -3,6 +3,24 @@ import { NavLink, useLocation } from 'react-router-dom';
 
 const sections = [
   {
+    label: 'Projetos',
+    path: '/projects',
+    icon: 'projects',
+    items: [
+      { to: '/projects', label: 'Gerenciar' },
+      { to: '/projects/new', label: 'Cadastro' },
+    ],
+  },
+  {
+    label: 'Tempo',
+    path: '/study-sessions',
+    icon: 'timer',
+    items: [
+      { to: '/study-sessions', label: 'Gerenciar' },
+      { to: '/study-sessions/new', label: 'Cadastro' },
+    ],
+  },
+  {
     label: 'Topicos',
     path: '/topics',
     icon: 'topics',
@@ -64,6 +82,23 @@ function Icon({ kind }: { kind: string }) {
       return (
         <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
           <path d="M4 11.5V20h6v-5.5H14V20h6v-8.5L12 4 4 11.5Z" />
+        </svg>
+      );
+    case 'projects':
+      return (
+        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
+          <path d="M4 7.5h16" />
+          <path d="M6 5v4" />
+          <path d="M10 5v4" />
+          <path d="M4 10.5h16v8H4z" />
+        </svg>
+      );
+    case 'timer':
+      return (
+        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
+          <circle cx="12" cy="13" r="7.5" />
+          <path d="M12 9v4l3 2" />
+          <path d="M9 3.5h6" />
         </svg>
       );
     case 'topics':

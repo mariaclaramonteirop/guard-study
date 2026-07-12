@@ -7,7 +7,7 @@ import { MarkdownToolbar } from '../components/MarkdownToolbar';
 import { Loading } from '../components/Loading';
 import { SectionTitle } from '../components/SectionTitle';
 import { useFetch } from '../hooks/useFetch';
-import type { Checkpoint, Mistake, ReviewSchedule, StudyLog } from '../types';
+import type { Checkpoint, Mistake, Project, ReviewSchedule, StudyLog } from '../types';
 
 export function ReviewScheduleForm() {
   const { id } = useParams();
@@ -18,23 +18,25 @@ export function ReviewScheduleForm() {
     date.setDate(date.getDate() + 1);
     return date.toISOString().slice(0, 10);
   }, []);
-  const [form, setForm] = useState({ study_log_id: '', checkpoint_id: '', mistake_id: '', title: '', scheduled_for: tomorrow, status: 'pending', notes: '' });
+  const [form, setForm] = useState({ project_id: '', study_log_id: '', checkpoint_id: '', mistake_id: '', title: '', scheduled_for: tomorrow, status: 'pending', notes: '' });
   const [formError, setFormError] = useState('');
   const notesRef = useRef<HTMLTextAreaElement | null>(null);
   const load = useCallback(async () => {
-    const [logs, checkpoints, mistakes, review] = await Promise.all([
+    const [projects, logs, checkpoints, mistakes, review] = await Promise.all([
+      api.get<Project[]>('/projects'),
       api.get<StudyLog[]>('/study-logs'),
       api.get<Checkpoint[]>('/checkpoints'),
       api.get<Mistake[]>('/mistakes'),
       isEdit ? api.get<ReviewSchedule>(`/review-schedules/${id}`) : Promise.resolve(null),
     ]);
-    return { logs, checkpoints, mistakes, review };
+    return { projects, logs, checkpoints, mistakes, review };
   }, [id, isEdit]);
   const { data, loading, error } = useFetch(load);
 
   useEffect(() => {
     if (data?.review) {
       setForm({
+        project_id: data.review.project_id ? String(data.review.project_id) : '',
         study_log_id: String(data.review.study_log_id),
         checkpoint_id: data.review.checkpoint_id ? String(data.review.checkpoint_id) : '',
         mistake_id: data.review.mistake_id ? String(data.review.mistake_id) : '',
@@ -53,16 +55,31 @@ export function ReviewScheduleForm() {
       return;
     }
     const payload = {
-      ...form,
+      project_id: form.project_id ? Number(form.project_id) : null,
       study_log_id: Number(form.study_log_id),
       checkpoint_id: form.checkpoint_id ? Number(form.checkpoint_id) : null,
       mistake_id: form.mistake_id ? Number(form.mistake_id) : null,
+      title: form.title,
+      scheduled_for: form.scheduled_for,
+      status: form.status,
       notes: form.notes || null,
     };
     if (isEdit) await api.put<ReviewSchedule>(`/review-schedules/${id}`, payload);
     else await api.post<ReviewSchedule>('/review-schedules', payload);
     navigate('/review-schedules');
   }
+
+  const filteredLogs = data?.logs.filter((log) => !form.project_id || log.project_id === Number(form.project_id)) ?? [];
+  const filteredCheckpoints = data?.checkpoints.filter((checkpoint) => {
+    const projectMatches = !form.project_id || checkpoint.project_id === Number(form.project_id);
+    const logMatches = !form.study_log_id || checkpoint.study_log_id === Number(form.study_log_id);
+    return projectMatches && logMatches;
+  }) ?? [];
+  const filteredMistakes = data?.mistakes.filter((mistake) => {
+    const projectMatches = !form.project_id || mistake.project_id === Number(form.project_id);
+    const logMatches = !form.study_log_id || mistake.study_log_id === Number(form.study_log_id);
+    return projectMatches && logMatches;
+  }) ?? [];
 
   function applyMarkdown(command: 'h1' | 'h2' | 'bold' | 'italic' | 'list' | 'quote' | 'code') {
     const textarea = notesRef.current;
@@ -125,17 +142,21 @@ export function ReviewScheduleForm() {
       {loading && <Loading />}
       {error && <ErrorMessage message={error} />}
       <form onSubmit={submit} className="grid gap-3 rounded border border-stone-200 bg-white p-4">
+        <select className="rounded border border-stone-300 px-3 py-2" value={form.project_id} onChange={(event) => setForm({ ...form, project_id: event.target.value, study_log_id: '', checkpoint_id: '', mistake_id: '' })}>
+          <option value="">Projeto opcional</option>
+          {data?.projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+        </select>
         <select className="rounded border border-stone-300 px-3 py-2" value={form.study_log_id} onChange={(event) => setForm({ ...form, study_log_id: event.target.value, checkpoint_id: '', mistake_id: '' })}>
           <option value="">Escolha o registro</option>
-          {data?.logs.map((log) => <option key={log.id} value={log.id}>{log.title}</option>)}
+          {filteredLogs.map((log) => <option key={log.id} value={log.id}>{log.title}</option>)}
         </select>
         <select className="rounded border border-stone-300 px-3 py-2" value={form.checkpoint_id} onChange={(event) => setForm({ ...form, checkpoint_id: event.target.value })}>
           <option value="">Checkpoint opcional</option>
-          {data?.checkpoints.filter((checkpoint) => !form.study_log_id || checkpoint.study_log_id === Number(form.study_log_id)).map((checkpoint) => <option key={checkpoint.id} value={checkpoint.id}>{checkpoint.title}</option>)}
+          {filteredCheckpoints.map((checkpoint) => <option key={checkpoint.id} value={checkpoint.id}>{checkpoint.title}</option>)}
         </select>
         <select className="rounded border border-stone-300 px-3 py-2" value={form.mistake_id} onChange={(event) => setForm({ ...form, mistake_id: event.target.value })}>
           <option value="">Erro opcional</option>
-          {data?.mistakes.filter((mistake) => !form.study_log_id || mistake.study_log_id === Number(form.study_log_id)).map((mistake) => <option key={mistake.id} value={mistake.id}>{mistake.title}</option>)}
+          {filteredMistakes.map((mistake) => <option key={mistake.id} value={mistake.id}>{mistake.title}</option>)}
         </select>
         <input className="rounded border border-stone-300 px-3 py-2" placeholder="Titulo" value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} />
         <input className="rounded border border-stone-300 px-3 py-2" type="date" value={form.scheduled_for} onChange={(event) => setForm({ ...form, scheduled_for: event.target.value })} />

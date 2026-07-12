@@ -7,29 +7,31 @@ import { MarkdownToolbar } from '../components/MarkdownToolbar';
 import { Loading } from '../components/Loading';
 import { SectionTitle } from '../components/SectionTitle';
 import { useFetch } from '../hooks/useFetch';
-import type { Checkpoint, Mistake, StudyLog } from '../types';
+import type { Checkpoint, Mistake, Project, StudyLog } from '../types';
 
 export function MistakeForm() {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEdit = Boolean(id);
-  const [form, setForm] = useState({ study_log_id: '', checkpoint_id: '', title: '', description: '', correction: '' });
+  const [form, setForm] = useState({ project_id: '', study_log_id: '', checkpoint_id: '', title: '', description: '', correction: '' });
   const [formError, setFormError] = useState('');
   const descriptionRef = useRef<HTMLTextAreaElement | null>(null);
   const correctionRef = useRef<HTMLTextAreaElement | null>(null);
   const load = useCallback(async () => {
-    const [logs, checkpoints, mistake] = await Promise.all([
+    const [projects, logs, checkpoints, mistake] = await Promise.all([
+      api.get<Project[]>('/projects'),
       api.get<StudyLog[]>('/study-logs'),
       api.get<Checkpoint[]>('/checkpoints'),
       isEdit ? api.get<Mistake>(`/mistakes/${id}`) : Promise.resolve(null),
     ]);
-    return { logs, checkpoints, mistake };
+    return { projects, logs, checkpoints, mistake };
   }, [id, isEdit]);
   const { data, loading, error } = useFetch(load);
 
   useEffect(() => {
     if (data?.mistake) {
       setForm({
+        project_id: data.mistake.project_id ? String(data.mistake.project_id) : '',
         study_log_id: String(data.mistake.study_log_id),
         checkpoint_id: data.mistake.checkpoint_id ? String(data.mistake.checkpoint_id) : '',
         title: data.mistake.title,
@@ -45,11 +47,25 @@ export function MistakeForm() {
       setFormError('Escolha o registro e informe titulo, erro e correcao.');
       return;
     }
-    const payload = { ...form, study_log_id: Number(form.study_log_id), checkpoint_id: form.checkpoint_id ? Number(form.checkpoint_id) : null };
+    const payload = {
+      project_id: form.project_id ? Number(form.project_id) : null,
+      study_log_id: Number(form.study_log_id),
+      checkpoint_id: form.checkpoint_id ? Number(form.checkpoint_id) : null,
+      title: form.title,
+      description: form.description,
+      correction: form.correction,
+    };
     if (isEdit) await api.put<Mistake>(`/mistakes/${id}`, payload);
     else await api.post<Mistake>('/mistakes', payload);
     navigate('/mistakes');
   }
+
+  const filteredLogs = data?.logs.filter((log) => !form.project_id || log.project_id === Number(form.project_id)) ?? [];
+  const filteredCheckpoints = data?.checkpoints.filter((checkpoint) => {
+    const projectMatches = !form.project_id || checkpoint.project_id === Number(form.project_id);
+    const logMatches = !form.study_log_id || checkpoint.study_log_id === Number(form.study_log_id);
+    return projectMatches && logMatches;
+  }) ?? [];
 
   function applyMarkdown(
     command: 'h1' | 'h2' | 'bold' | 'italic' | 'list' | 'quote' | 'code',
@@ -115,13 +131,17 @@ export function MistakeForm() {
       {loading && <Loading />}
       {error && <ErrorMessage message={error} />}
       <form onSubmit={submit} className="grid gap-3 rounded border border-stone-200 bg-white p-4">
+        <select className="rounded border border-stone-300 px-3 py-2" value={form.project_id} onChange={(event) => setForm({ ...form, project_id: event.target.value, study_log_id: '', checkpoint_id: '' })}>
+          <option value="">Projeto opcional</option>
+          {data?.projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+        </select>
         <select className="rounded border border-stone-300 px-3 py-2" value={form.study_log_id} onChange={(event) => setForm({ ...form, study_log_id: event.target.value, checkpoint_id: '' })}>
           <option value="">Escolha o registro</option>
-          {data?.logs.map((log) => <option key={log.id} value={log.id}>{log.title}</option>)}
+          {filteredLogs.map((log) => <option key={log.id} value={log.id}>{log.title}</option>)}
         </select>
         <select className="rounded border border-stone-300 px-3 py-2" value={form.checkpoint_id} onChange={(event) => setForm({ ...form, checkpoint_id: event.target.value })}>
           <option value="">Checkpoint opcional</option>
-          {data?.checkpoints.filter((checkpoint) => !form.study_log_id || checkpoint.study_log_id === Number(form.study_log_id)).map((checkpoint) => <option key={checkpoint.id} value={checkpoint.id}>{checkpoint.title}</option>)}
+          {filteredCheckpoints.map((checkpoint) => <option key={checkpoint.id} value={checkpoint.id}>{checkpoint.title}</option>)}
         </select>
         <input className="rounded border border-stone-300 px-3 py-2" placeholder="Titulo" value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} />
         <MarkdownToolbar onApply={(command) => applyMarkdown(command, 'description')} />

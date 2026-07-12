@@ -7,28 +7,30 @@ import { MarkdownToolbar } from '../components/MarkdownToolbar';
 import { Loading } from '../components/Loading';
 import { SectionTitle } from '../components/SectionTitle';
 import { useFetch } from '../hooks/useFetch';
-import type { StudyLog, Topic } from '../types';
+import type { Project, StudyLog, Topic } from '../types';
 
 export function StudyLogForm() {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEdit = Boolean(id);
   const today = new Date().toISOString().slice(0, 10);
-  const [form, setForm] = useState({ topic_id: '', title: '', content: '', duration_minutes: '30', studied_at: today });
+  const [form, setForm] = useState({ project_id: '', topic_id: '', title: '', content: '', duration_minutes: '30', studied_at: today });
   const [formError, setFormError] = useState('');
   const contentRef = useRef<HTMLTextAreaElement | null>(null);
   const load = useCallback(async () => {
-    const [topics, log] = await Promise.all([
+    const [projects, topics, log] = await Promise.all([
+      api.get<Project[]>('/projects'),
       api.get<Topic[]>('/topics'),
       isEdit ? api.get<StudyLog>(`/study-logs/${id}`) : Promise.resolve(null),
     ]);
-    return { topics, log };
+    return { projects, topics, log };
   }, [id, isEdit]);
   const { data, loading, error } = useFetch(load);
 
   useEffect(() => {
     if (data?.log) {
       setForm({
+        project_id: data.log.project_id ? String(data.log.project_id) : '',
         topic_id: String(data.log.topic_id),
         title: data.log.title,
         content: data.log.content,
@@ -44,7 +46,14 @@ export function StudyLogForm() {
       setFormError('Escolha o topico e informe titulo e conteudo.');
       return;
     }
-    const payload = { ...form, topic_id: Number(form.topic_id), duration_minutes: Number(form.duration_minutes) };
+    const payload = {
+      project_id: form.project_id ? Number(form.project_id) : null,
+      topic_id: Number(form.topic_id),
+      title: form.title,
+      content: form.content,
+      duration_minutes: Number(form.duration_minutes),
+      studied_at: form.studied_at,
+    };
     if (isEdit) await api.put<StudyLog>(`/study-logs/${id}`, payload);
     else await api.post<StudyLog>('/study-logs', payload);
     navigate('/study-logs');
@@ -110,6 +119,10 @@ export function StudyLogForm() {
       {loading && <Loading />}
       {error && <ErrorMessage message={error} />}
       <form onSubmit={submit} className="grid gap-3 rounded border border-stone-200 bg-white p-4">
+        <select className="rounded border border-stone-300 px-3 py-2" value={form.project_id} onChange={(event) => setForm({ ...form, project_id: event.target.value })}>
+          <option value="">Projeto opcional</option>
+          {data?.projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+        </select>
         <select className="rounded border border-stone-300 px-3 py-2" value={form.topic_id} onChange={(event) => setForm({ ...form, topic_id: event.target.value })}>
           <option value="">Escolha o topico</option>
           {data?.topics.map((topic) => <option key={topic.id} value={topic.id}>{topic.name}</option>)}
