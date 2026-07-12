@@ -25,8 +25,11 @@ final class PdoUserDao extends AbstractPdoDao implements UserDaoInterface
 
     public function findByLogin(string $login): ?array
     {
-        $statement = $this->pdo->prepare('SELECT * FROM users WHERE email = :login OR name = :login LIMIT 1');
-        $statement->execute(['login' => $login]);
+        $statement = $this->pdo->prepare('SELECT * FROM users WHERE email = :email OR name = :name LIMIT 1');
+        $statement->execute([
+            'email' => $login,
+            'name' => $login,
+        ]);
         $row = $statement->fetch();
 
         return $row ?: null;

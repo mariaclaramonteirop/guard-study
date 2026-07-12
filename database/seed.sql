@@ -1,7 +1,7 @@
 INSERT INTO users (name, email, password_hash, role) VALUES
-('Admin Guard', 'admin@guardstudy.local', '$2y$10$wJ9wBRB.7qG2r6pglvJ7QOzLme25Ge5aPrlh2uXPhn5J21.zlUKGm', 'admin'),
-('Fukano Manager', 'fukano@guardstudy.local', '$2y$10$wJ9wBRB.7qG2r6pglvJ7QOzLme25Ge5aPrlh2uXPhn5J21.zlUKGm', 'manager'),
-('Maria Clara', 'maria@guardstudy.local', '$2y$10$wJ9wBRB.7qG2r6pglvJ7QOzLme25Ge5aPrlh2uXPhn5J21.zlUKGm', 'user');
+('Admin Guard', 'admin@guardstudy.local', '$2y$10$Xn5tRFUG79MQ3GTseTLnXOHe4R580qL/kFWiQxn8n9BDbNoAtWXxa', 'admin'),
+('Fukano Manager', 'fukano@guardstudy.local', '$2y$10$Xn5tRFUG79MQ3GTseTLnXOHe4R580qL/kFWiQxn8n9BDbNoAtWXxa', 'manager'),
+('Maria Clara', 'maria@guardstudy.local', '$2y$10$Xn5tRFUG79MQ3GTseTLnXOHe4R580qL/kFWiQxn8n9BDbNoAtWXxa', 'user');
 
 INSERT INTO topics (user_id, name, description, status) VALUES
 (3, 'PHP 8 e POO', 'Classes, objetos, tipagem e excecoes.', 'ativo'),
