@@ -22,6 +22,9 @@ import { StudyLogDetail } from './pages/StudyLogDetail';
 import { StudyLogForm } from './pages/StudyLogForm';
 import { StudyLogs } from './pages/StudyLogs';
 import { Login } from './pages/Login';
+import { Home } from './pages/Home';
+import { Signup } from './pages/Signup';
+import { NotFound } from './pages/NotFound';
 import { UserForm } from './pages/UserForm';
 import { Users } from './pages/Users';
 import { TopicForm } from './pages/TopicForm';
@@ -73,7 +76,10 @@ const router = createBrowserRouter([
       },
     ],
   },
+  { path: '/home', element: <Home /> },
+  { path: '/signup', element: <Signup /> },
   { path: '/login', element: <Login /> },
+  { path: '*', element: <NotFound /> },
 ]);
 
 export function App() {

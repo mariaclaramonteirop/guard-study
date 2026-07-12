@@ -1,9 +1,9 @@
 import { FormEvent, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import { setSessionUser } from '../api/session';
+import { AuthShell, Field, SubmitButton } from '../components/auth/AuthShell';
 import { ErrorMessage } from '../components/ErrorMessage';
-import { SectionTitle } from '../components/SectionTitle';
 
 type LoginResponse = {
   id: number;
@@ -37,35 +37,55 @@ export function Login() {
   }
 
   return (
-    <div className="mx-auto max-w-md">
-      <SectionTitle title="Entrar" subtitle="Acesse com email e senha para carregar seus dados." />
+      <AuthShell
+      title="Entrar"
+      subtitle="Bem-vindo de volta. Continue de onde parou."
+      footer={
+        <>
+          Ainda não tem conta?{' '}
+          <Link to="/signup" className="font-medium text-primary hover:underline">
+            Criar conta
+          </Link>
+        </>
+      }
+    >
       {error && <ErrorMessage message={error} />}
-      <form onSubmit={onSubmit} className="mt-6 space-y-4 rounded border border-stone-200 bg-white p-4">
-        <label className="block">
-          <span className="mb-1 block text-sm font-medium text-ink">Email ou usuario</span>
-          <input
-            type="text"
-            value={login}
-            onChange={(event) => setLogin(event.target.value)}
-            className="w-full rounded border border-stone-300 px-3 py-2"
-            required
-          />
-        </label>
-        <label className="block">
-          <span className="mb-1 block text-sm font-medium text-ink">Senha</span>
+      <form onSubmit={onSubmit} className="space-y-5">
+        <Field
+          id="login"
+          label="E-mail ou usuário"
+          type="text"
+          placeholder="voce@exemplo.com"
+          autoComplete="email"
+          value={login}
+          onChange={setLogin}
+        />
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label htmlFor="password" className="text-sm font-medium text-white">
+              Senha
+            </label>
+            <a href="#" className="text-xs text-violet-100/70 hover:text-primary">
+              Esqueci a senha
+            </a>
+          </div>
           <div className="flex gap-2">
             <input
+              id="password"
+              name="password"
               type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              className="min-w-0 flex-1 rounded border border-stone-300 px-3 py-2"
+              className="min-w-0 flex-1 rounded-lg border border-white/12 bg-[#221433]/80 px-3.5 py-2.5 text-sm text-white placeholder:text-violet-100/45 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+              placeholder="••••••••"
+              autoComplete="current-password"
               required
             />
             <button
               type="button"
               onClick={() => setShowPassword((current) => !current)}
               aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
-              className="rounded border border-stone-300 px-3 py-2 text-stone-700"
+              className="rounded-lg border border-white/12 bg-[#221433]/80 px-3 py-2 text-violet-100/75"
             >
               {showPassword ? (
                 <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -82,15 +102,9 @@ export function Login() {
               )}
             </button>
           </div>
-        </label>
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full rounded bg-guard px-4 py-2 font-medium text-white disabled:opacity-60"
-        >
-          {loading ? 'Entrando...' : 'Entrar'}
-        </button>
+        </div>
+        <SubmitButton disabled={loading}>{loading ? 'Entrando...' : 'Entrar'}</SubmitButton>
       </form>
-    </div>
+    </AuthShell>
   );
 }
