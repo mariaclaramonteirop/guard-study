@@ -52,6 +52,12 @@ function toDateKey(value: Date) {
   return value.toISOString().slice(0, 10);
 }
 
+function dayName(value: Date) {
+  return value.toLocaleDateString('pt-BR', {
+    weekday: 'short',
+  }).replace('.', '');
+}
+
 const rewardCategoryLabels: Record<string, string> = {
   metas: 'Metas',
   constancia: 'Constancia',
@@ -84,6 +90,7 @@ function previewMarkdown(value: string | null, limit = 160) {
 }
 
 const recentMarkdownPreviewClass = 'mt-1 max-h-12 overflow-hidden break-words text-sm text-stone-600 [&_*]:my-0 [&_*]:max-w-full [&_*]:break-words [&_code]:break-all [&_pre]:hidden';
+const streakIcon = '/badges/foguinho-sequencia.png';
 
 export function Dashboard() {
   const user = getSessionUser();
@@ -204,6 +211,45 @@ export function Dashboard() {
   const checkpointTotal = completedCheckpoints + openCheckpoints;
   const checkpointCompletionPercent = checkpointTotal > 0 ? Math.round((completedCheckpoints / checkpointTotal) * 100) : 0;
   const checkpointStroke = checkpointTotal > 0 ? `${checkpointCompletionPercent} ${100 - checkpointCompletionPercent}` : '0 100';
+  const studyMinutesByDay = data
+    ? data.sessions
+        .filter((session) => session.status === 'completed' && session.ended_at)
+        .reduce<Record<string, number>>((acc, session) => {
+          const key = session.ended_at?.slice(0, 10);
+          if (!key) {
+            return acc;
+          }
+
+          acc[key] = (acc[key] ?? 0) + session.actual_minutes;
+          return acc;
+        }, {})
+    : {};
+  const streakDays = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date();
+    date.setHours(0, 0, 0, 0);
+    date.setDate(date.getDate() - (6 - index));
+
+    const key = toDateKey(date);
+    const minutes = studyMinutesByDay[key] ?? 0;
+
+    return {
+      key,
+      date,
+      day: dayName(date),
+      label: formatShortDay(date),
+      minutes,
+      studied: minutes > 0,
+      isToday: index === 6,
+    };
+  });
+  let visibleCurrentStreak = 0;
+  for (const day of [...streakDays].reverse()) {
+    if (!day.studied) {
+      break;
+    }
+
+    visibleCurrentStreak += 1;
+  }
 
   return (
     <>
@@ -357,14 +403,14 @@ export function Dashboard() {
                 </span>
               </div>
 
-              <div className="flex h-56 items-end gap-3 rounded border border-stone-100 bg-stone-50 px-4 py-5">
+              <div className="flex h-64 items-end gap-3 rounded border border-stone-100 bg-stone-50 px-4 py-5">
                 {dailyStudyStats.map((item) => {
                   const height = maxDailyMinutes > 0 ? Math.max((item.minutes / maxDailyMinutes) * 100, item.minutes > 0 ? 12 : 0) : 0;
 
                   return (
                     <div key={item.key} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-2">
                       <span className="text-xs font-medium text-stone-500">{item.minutes}</span>
-                      <div className="flex h-36 w-full items-end">
+                      <div className="flex h-44 w-full items-end">
                         <div
                           className="w-full rounded-t bg-violet-500 transition hover:bg-violet-700"
                           style={{ height: `${height}%` }}
@@ -376,7 +422,77 @@ export function Dashboard() {
                   );
                 })}
               </div>
+
+              <div className="mt-4 rounded border border-stone-100 bg-stone-50 p-4">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div>
+                    <h4 className="text-sm font-semibold text-ink">Tempo por assunto</h4>
+                    <p className="text-xs text-stone-500">Registros agrupados por topico.</p>
+                  </div>
+                  <span className="rounded bg-white px-2 py-1 text-xs font-medium text-stone-500">
+                    {topicStats.slice(0, 4).length} topico(s)
+                  </span>
+                </div>
+
+                {topicStats.length === 0 ? (
+                  <p className="text-sm text-stone-600">Ainda nao ha tempo por assunto.</p>
+                ) : (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {topicStats.slice(0, 4).map((item) => {
+                      const width = maxTopicMinutes > 0 ? Math.max((item.minutes / maxTopicMinutes) * 100, 8) : 0;
+
+                      return (
+                        <div key={item.id} className="min-w-0 rounded bg-white p-3">
+                          <div className="flex items-center justify-between gap-3 text-xs">
+                            <span className="min-w-0 truncate font-medium text-ink">{item.label}</span>
+                            <span className="shrink-0 text-stone-500">{item.minutes} min</span>
+                          </div>
+                          <div className="mt-2 h-2 overflow-hidden rounded-full bg-stone-100">
+                            <div className="h-full rounded-full bg-violet-600" style={{ width: `${width}%` }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
+
+            <div className="grid gap-4">
+              <div className="rounded border border-stone-200 bg-white p-4">
+                <div className="mb-4 flex items-start justify-between gap-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-ink">Sequencia de estudos</h3>
+                    <p className="text-sm text-stone-600">Calendario dos ultimos 7 dias.</p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2 rounded bg-violet-50 px-3 py-2">
+                    <img src={streakIcon} alt="" className="h-8 w-8 object-contain" />
+                    <div>
+                      <strong className="block text-lg leading-none text-violet-800">{visibleCurrentStreak}</strong>
+                      <span className="text-xs text-violet-700">dia(s)</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-7 gap-2">
+                  {streakDays.map((day) => (
+                    <div key={day.key} className="grid gap-2 text-center">
+                      <span className="text-xs font-medium capitalize text-stone-500">{day.day}</span>
+                      <div
+                        className={`grid aspect-square place-items-center rounded border text-sm font-semibold ${
+                          day.studied
+                            ? 'border-violet-300 bg-violet-600 text-white shadow-sm'
+                            : 'border-red-200 bg-red-500/10 text-red-500'
+                        } ${day.isToday ? 'ring-2 ring-violet-300 ring-offset-2' : ''}`}
+                        title={`${day.label}: ${day.minutes} minuto(s)`}
+                      >
+                        {day.date.getDate()}
+                      </div>
+                      <span className="truncate text-[11px] text-stone-500">{day.minutes}m</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
             <div className="rounded border border-stone-200 bg-white p-5">
               <div className="mb-4">
@@ -419,6 +535,7 @@ export function Dashboard() {
                   </div>
                 </div>
               </div>
+            </div>
             </div>
           </section>
 
