@@ -20,4 +20,10 @@ final class AuthController
         $payload = (array) $request->getParsedBody();
         return JsonView::success($response, $this->service->login($payload));
     }
+
+    public function signup(Request $request, Response $response): Response
+    {
+        $payload = (array) $request->getParsedBody();
+        return JsonView::success($response, $this->service->signup($payload), 201);
+    }
 }

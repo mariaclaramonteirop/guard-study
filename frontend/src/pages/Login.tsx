@@ -10,6 +10,7 @@ type LoginResponse = {
   name: string;
   email: string;
   role: string;
+  permissions?: Record<string, boolean>;
 };
 
 export function Login() {
@@ -27,7 +28,7 @@ export function Login() {
 
     try {
       const user = await api.post<LoginResponse>('/auth/login', { email: login, password });
-      setSessionUser({ id: user.id, role: user.role, name: user.name });
+      setSessionUser({ id: user.id, role: user.role, name: user.name, permissions: user.permissions });
       navigate('/');
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Nao foi possivel entrar.');

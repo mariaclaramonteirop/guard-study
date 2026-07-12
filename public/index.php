@@ -138,6 +138,7 @@ $app->group('/users', function ($group) use ($users): void {
 });
 
 $app->post('/auth/login', [$auth, 'login']);
+$app->post('/auth/signup', [$auth, 'signup']);
 
 $app->patch('/checkpoints/{id:[0-9]+}/complete', fn (Request $request, Response $response, array $args): Response =>
     $checkpoints->patch($request, $response, $args, ['is_completed' => 1, 'completed_at' => date('Y-m-d H:i:s')])

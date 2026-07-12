@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Exceptions\AuthorizationException;
 use App\Exceptions\ValidationException;
+use App\Security\Permissions;
 use App\Services\ResourceService;
 use App\Security\UserContext;
 use App\Views\JsonView;
@@ -53,6 +54,7 @@ final class UserController
 
         $payload['role'] = $role;
         $payload['password_hash'] = password_hash($password, PASSWORD_DEFAULT);
+        $payload['permissions'] = Permissions::toStorage(Permissions::fromPayload($payload['permissions'] ?? null, $role));
         unset($payload['password']);
 
         return JsonView::success($response, $this->hideHash($this->service->create($payload)), 201);
@@ -75,6 +77,18 @@ final class UserController
             throw new AuthorizationException('Somente o manager pode conceder permissoes.');
         }
 
+        if (array_key_exists('permissions', $payload) || array_key_exists('role', $payload)) {
+            $current = $this->service->find((int) $args['id']);
+            $currentRole = (string) ($current['role'] ?? 'user');
+            $targetRole = (string) ($payload['role'] ?? $currentRole);
+
+            if (array_key_exists('permissions', $payload)) {
+                $payload['permissions'] = Permissions::toStorage(Permissions::fromPayload($payload['permissions'], $targetRole));
+            } elseif ($targetRole !== $currentRole) {
+                $payload['permissions'] = Permissions::toStorage(Permissions::defaultsForRole($targetRole));
+            }
+        }
+
         return JsonView::success($response, $this->hideHash($this->service->update((int) $args['id'], $payload)));
     }
 
@@ -94,6 +108,7 @@ final class UserController
     private function hideHash(array $user): array
     {
         unset($user['password_hash']);
+        $user['permissions'] = Permissions::fromStorage($user['permissions'] ?? null, (string) ($user['role'] ?? 'user'));
         return $user;
     }
 

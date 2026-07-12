@@ -1,11 +1,23 @@
 import { useEffect, useMemo, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
+import { getSessionUser } from '../api/session';
+import type { ModuleKey } from '../config/permissions';
 
-const sections = [
+type Section = {
+  label: string;
+  path: string;
+  icon: string;
+  module: ModuleKey;
+  managerOnly?: boolean;
+  items: Array<{ to: string; label: string }>;
+};
+
+const sections: Section[] = [
   {
     label: 'Projetos',
     path: '/projects',
     icon: 'projects',
+    module: 'projects',
     items: [
       { to: '/projects', label: 'Gerenciar' },
       { to: '/projects/new', label: 'Cadastro' },
@@ -15,6 +27,7 @@ const sections = [
     label: 'Tempo',
     path: '/study-sessions',
     icon: 'timer',
+    module: 'study_sessions',
     items: [
       { to: '/study-sessions', label: 'Gerenciar' },
       { to: '/study-sessions/new', label: 'Cadastro' },
@@ -24,6 +37,7 @@ const sections = [
     label: 'Metas',
     path: '/goals',
     icon: 'goals',
+    module: 'study_goals',
     items: [
       { to: '/goals', label: 'Gerenciar' },
       { to: '/goals/new', label: 'Cadastro' },
@@ -33,15 +47,17 @@ const sections = [
     label: 'Recompensas',
     path: '/rewards',
     icon: 'rewards',
+    module: 'rewards',
     items: [
       { to: '/rewards', label: 'Gerenciar' },
       { to: '/rewards/new', label: 'Cadastro' },
     ],
   },
   {
-    label: 'Topicos',
+    label: 'Tópicos',
     path: '/topics',
     icon: 'topics',
+    module: 'topics',
     items: [
       { to: '/topics', label: 'Gerenciar' },
       { to: '/topics/new', label: 'Cadastro' },
@@ -51,6 +67,7 @@ const sections = [
     label: 'Registros',
     path: '/study-logs',
     icon: 'logs',
+    module: 'study_logs',
     items: [
       { to: '/study-logs', label: 'Gerenciar' },
       { to: '/study-logs/new', label: 'Cadastro' },
@@ -60,6 +77,7 @@ const sections = [
     label: 'Checkpoints',
     path: '/checkpoints',
     icon: 'checkpoints',
+    module: 'checkpoints',
     items: [
       { to: '/checkpoints', label: 'Gerenciar' },
       { to: '/checkpoints/new', label: 'Cadastro' },
@@ -69,27 +87,32 @@ const sections = [
     label: 'Erros',
     path: '/mistakes',
     icon: 'mistakes',
+    module: 'mistakes',
     items: [
       { to: '/mistakes', label: 'Gerenciar' },
       { to: '/mistakes/new', label: 'Cadastro' },
     ],
   },
   {
-    label: 'Revisoes',
+    label: 'Revisões',
     path: '/review-schedules',
     icon: 'reviews',
+    module: 'review_schedules',
     items: [
       { to: '/review-schedules', label: 'Gerenciar' },
       { to: '/review-schedules/new', label: 'Cadastro' },
     ],
   },
   {
-    label: 'Usuarios',
+    label: 'Usuários',
     path: '/users',
     icon: 'users',
+    module: 'users',
+    managerOnly: true,
     items: [
       { to: '/users', label: 'Gerenciar' },
       { to: '/users/new', label: 'Cadastro' },
+      { to: '/users/permissions', label: 'Permissões' },
     ],
   },
 ];
@@ -194,6 +217,7 @@ type SidebarProps = {
 
 export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
   const location = useLocation();
+  const currentUser = getSessionUser();
   const initialOpen = useMemo(
     () => sections.filter((section) => location.pathname.startsWith(section.path)).map((section) => section.label),
     [location.pathname],
@@ -217,6 +241,20 @@ export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
 
     toggleSection(label);
   }
+
+  function canSeeSection(section: Section): boolean {
+    if (section.managerOnly) {
+      return currentUser?.role === 'manager' || currentUser?.role === 'admin';
+    }
+
+    if (!currentUser || currentUser.role === 'manager' || currentUser.role === 'admin') {
+      return true;
+    }
+
+    return currentUser.permissions?.[section.module] !== false;
+  }
+
+  const visibleSections = sections.filter(canSeeSection);
 
   return (
     <aside
@@ -257,9 +295,8 @@ export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
           {!collapsed && <span>Dashboard</span>}
         </NavLink>
 
-        {sections.map((section) => {
+        {visibleSections.map((section) => {
           const isOpen = openSections.includes(section.label);
-          const IconKind = section.icon;
 
           return (
             <div key={section.label} className="space-y-1">
@@ -273,7 +310,7 @@ export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
                 title={section.label}
               >
                 <span className={`flex items-center gap-3 ${collapsed ? 'justify-center' : ''}`}>
-                  <Icon kind={IconKind} />
+                  <Icon kind={section.icon} />
                   {!collapsed && <span>{section.label}</span>}
                 </span>
                 {!collapsed && (

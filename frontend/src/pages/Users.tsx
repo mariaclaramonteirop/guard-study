@@ -23,7 +23,7 @@ export function Users() {
     <>
       <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <SectionTitle title="Usuarios" subtitle="Gerencie acessos e perfis do sistema." />
-        {currentUser?.role === 'manager' && (
+        {(currentUser?.role === 'manager' || currentUser?.role === 'admin') && (
           <Link to="/users/new" className="w-fit rounded bg-guard px-4 py-2 text-sm font-medium text-white">
             Novo usuario
           </Link>
@@ -42,8 +42,11 @@ export function Users() {
                 <span className="mt-2 inline-block rounded bg-stone-100 px-2 py-1 text-xs">{user.role}</span>
               </div>
               <div className="flex flex-wrap gap-2">
+                <Link to={`/users/permissions?user=${user.id}`} className="rounded border border-stone-300 px-3 py-1 text-sm">
+                  Permissões
+                </Link>
                 <Link to={`/users/${user.id}/edit`} className="rounded border border-stone-300 px-3 py-1 text-sm">Editar</Link>
-                {currentUser?.role === 'manager' && (
+                {(currentUser?.role === 'manager' || currentUser?.role === 'admin') && (
                   <button onClick={() => void remove(user.id)} className="rounded border border-stone-300 px-3 py-1 text-sm">
                     Excluir
                   </button>

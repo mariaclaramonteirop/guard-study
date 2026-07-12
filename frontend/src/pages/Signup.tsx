@@ -1,10 +1,31 @@
-import { FormEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { FormEvent, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { api } from '../api/client';
+import { ErrorMessage } from '../components/ErrorMessage';
 import { AuthShell, Field, SubmitButton } from '../components/auth/AuthShell';
+import type { User } from '../types';
 
 export function Signup() {
-  function onSubmit(event: FormEvent<HTMLFormElement>) {
+  const navigate = useNavigate();
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    try {
+      await api.post<User>('/auth/signup', { name, email, password });
+      navigate('/login');
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Nao foi possivel criar a conta.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -21,13 +42,28 @@ export function Signup() {
       }
     >
       <form className="space-y-5" onSubmit={onSubmit}>
-        <Field id="name" label="Nome" placeholder="Seu nome" autoComplete="name" />
-        <Field id="email" label="E-mail" type="email" placeholder="voce@exemplo.com" autoComplete="email" />
-        <Field id="password" label="Senha" type="password" placeholder="Mínimo 8 caracteres" autoComplete="new-password" />
-        <SubmitButton>Criar conta</SubmitButton>
-        <p className="text-center text-xs text-violet-100/70">
-          Ao continuar, você concorda com nossos Termos e Política de Privacidade.
-        </p>
+        {error && <ErrorMessage message={error} />}
+        <Field id="name" label="Nome" placeholder="Seu nome" autoComplete="name" value={name} onChange={setName} />
+        <Field
+          id="email"
+          label="E-mail"
+          type="email"
+          placeholder="voce@exemplo.com"
+          autoComplete="email"
+          value={email}
+          onChange={setEmail}
+        />
+        <Field
+          id="password"
+          label="Senha"
+          type="password"
+          placeholder="Mínimo 8 caracteres"
+          autoComplete="new-password"
+          value={password}
+          onChange={setPassword}
+        />
+        <SubmitButton disabled={loading}>{loading ? 'Criando...' : 'Criar conta'}</SubmitButton>
+        <p className="text-center text-xs text-violet-100/70">Ao continuar, você concorda com nossos termos de uso.</p>
       </form>
     </AuthShell>
   );

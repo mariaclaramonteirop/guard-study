@@ -13,7 +13,7 @@ export function UserForm() {
   const navigate = useNavigate();
   const isEdit = Boolean(id);
   const currentUser = getSessionUser();
-  const canAssignRole = currentUser?.role === 'manager';
+  const canAssignRole = currentUser?.role === 'manager' || currentUser?.role === 'admin';
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'user' as User['role'] });
   const [showPassword, setShowPassword] = useState(false);
   const [formError, setFormError] = useState('');
@@ -108,6 +108,11 @@ export function UserForm() {
           </select>
         ) : (
           <input className="rounded border border-stone-300 px-3 py-2 bg-stone-50" value="Usuario" disabled />
+        )}
+        {isEdit && canAssignRole && (
+          <Link to={`/users/permissions?user=${id}`} className="w-fit text-sm text-guard hover:underline">
+            Ajustar permissoes por modulo
+          </Link>
         )}
         {formError && <p className="text-sm text-red-700">{formError}</p>}
         <button className="w-fit rounded bg-guard px-4 py-2 font-medium text-white">Salvar</button>

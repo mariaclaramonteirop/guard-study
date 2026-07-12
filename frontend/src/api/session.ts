@@ -4,6 +4,7 @@ export type SessionUser = {
   id: number;
   role: string;
   name: string;
+  permissions?: Record<string, boolean>;
 };
 
 export function getSessionUser(): SessionUser | null {
@@ -26,6 +27,7 @@ export function getSessionUser(): SessionUser | null {
       id: Number(parsed.id),
       role: String(parsed.role),
       name: String(parsed.name),
+      permissions: typeof parsed.permissions === 'object' && parsed.permissions !== null ? (parsed.permissions as Record<string, boolean>) : undefined,
     };
   } catch {
     return null;

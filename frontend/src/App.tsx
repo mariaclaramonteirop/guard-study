@@ -26,6 +26,7 @@ import { Home } from './pages/Home';
 import { Signup } from './pages/Signup';
 import { NotFound } from './pages/NotFound';
 import { UserForm } from './pages/UserForm';
+import { UserPermissions } from './pages/UserPermissions';
 import { Users } from './pages/Users';
 import { TopicForm } from './pages/TopicForm';
 import { Topics } from './pages/Topics';
@@ -72,6 +73,7 @@ const router = createBrowserRouter([
           { path: 'users', element: <Users /> },
           { path: 'users/new', element: <UserForm /> },
           { path: 'users/:id/edit', element: <UserForm /> },
+          { path: 'users/permissions', element: <UserPermissions /> },
         ],
       },
     ],

@@ -11,7 +11,7 @@ final class PdoUserDao extends AbstractPdoDao implements UserDaoInterface
 {
     public function __construct(PDO $pdo)
     {
-        parent::__construct($pdo, 'users', ['name', 'email', 'password_hash', 'role']);
+        parent::__construct($pdo, 'users', ['name', 'email', 'password_hash', 'role', 'permissions']);
     }
 
     public function findByEmail(string $email): ?array
