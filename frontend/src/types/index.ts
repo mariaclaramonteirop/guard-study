@@ -54,6 +54,9 @@ export type DashboardSummary = {
   projects: number;
   studySessions: number;
   studySessionMinutes: number;
+  goalsActive: number;
+  rewardsClaimed: number;
+  rewardPoints: number;
   topics: number;
   studyLogs: number;
   checkpointsOpen: number;
@@ -114,5 +117,34 @@ export type StudySession = {
   status: 'running' | 'paused' | 'completed' | 'cancelled';
   started_at: string;
   ended_at: string | null;
+  notes: string | null;
+};
+
+export type StudyGoal = {
+  id: number;
+  user_id: number | null;
+  project_id: number | null;
+  title: string;
+  description: string | null;
+  target_minutes: number;
+  target_sessions: number | null;
+  reward_title: string;
+  reward_points: number;
+  status: 'active' | 'paused' | 'achieved';
+  achieved_at: string | null;
+  notes: string | null;
+};
+
+export type Reward = {
+  id: number;
+  user_id: number | null;
+  goal_id: number | null;
+  title: string;
+  description: string | null;
+  points: number;
+  kind: 'badge' | 'bonus' | 'streak' | 'custom';
+  status: 'locked' | 'unlocked' | 'claimed';
+  unlocked_at: string | null;
+  claimed_at: string | null;
   notes: string | null;
 };

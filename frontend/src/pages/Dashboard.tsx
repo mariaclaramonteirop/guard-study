@@ -5,7 +5,7 @@ import { Loading } from '../components/Loading';
 import { SectionTitle } from '../components/SectionTitle';
 import { StatCard } from '../components/StatCard';
 import { useFetch } from '../hooks/useFetch';
-import type { Checkpoint, DashboardSummary, Mistake, Project, StudyLog, StudySession, Topic } from '../types';
+import type { Checkpoint, DashboardSummary, Mistake, Project, Reward, StudyGoal, StudyLog, StudySession, Topic } from '../types';
 
 export function Dashboard() {
   const load = useCallback(async (): Promise<{
@@ -14,14 +14,18 @@ export function Dashboard() {
     topics: Topic[];
     logs: StudyLog[];
     sessions: StudySession[];
+    goals: StudyGoal[];
+    rewards: Reward[];
   }> => {
-    const [projects, topics, logs, checkpoints, mistakes, sessions] = await Promise.all([
+    const [projects, topics, logs, checkpoints, mistakes, sessions, goals, rewards] = await Promise.all([
       api.get<Project[]>('/projects'),
       api.get<Topic[]>('/topics'),
       api.get<StudyLog[]>('/study-logs'),
       api.get<Checkpoint[]>('/checkpoints'),
       api.get<Mistake[]>('/mistakes'),
       api.get<StudySession[]>('/study-sessions'),
+      api.get<StudyGoal[]>('/goals'),
+      api.get<Reward[]>('/rewards'),
     ]);
 
     return {
@@ -31,6 +35,9 @@ export function Dashboard() {
         studyLogs: logs.length,
         studySessions: sessions.length,
         studySessionMinutes: sessions.filter((session) => session.status === 'completed').reduce((total, session) => total + session.actual_minutes, 0),
+        goalsActive: goals.filter((goal) => goal.status === 'active').length,
+        rewardsClaimed: rewards.filter((reward) => reward.status === 'claimed').length,
+        rewardPoints: rewards.filter((reward) => reward.status === 'claimed').reduce((total, reward) => total + reward.points, 0),
         checkpointsOpen: checkpoints.filter((item) => !item.is_completed).length,
         mistakesToReview: mistakes.filter((item) => !item.is_reviewed).length,
       },
@@ -38,6 +45,8 @@ export function Dashboard() {
       topics,
       logs,
       sessions,
+      goals,
+      rewards,
     };
   }, []);
 
@@ -92,9 +101,12 @@ export function Dashboard() {
           </div>
 
           <section className="rounded border border-stone-200 bg-white p-4">
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
               <StatCard label="Sessoes de estudo" value={data.summary.studySessions} tone="violet" />
               <StatCard label="Minutos nas sessoes" value={data.summary.studySessionMinutes} />
+              <StatCard label="Metas ativas" value={data.summary.goalsActive} tone="violet" />
+              <StatCard label="Recompensas resgatadas" value={data.summary.rewardsClaimed} />
+              <StatCard label="Pontos ganhos" value={data.summary.rewardPoints} tone="amber" />
             </div>
           </section>
 

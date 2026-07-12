@@ -21,6 +21,24 @@ const sections = [
     ],
   },
   {
+    label: 'Metas',
+    path: '/goals',
+    icon: 'goals',
+    items: [
+      { to: '/goals', label: 'Gerenciar' },
+      { to: '/goals/new', label: 'Cadastro' },
+    ],
+  },
+  {
+    label: 'Recompensas',
+    path: '/rewards',
+    icon: 'rewards',
+    items: [
+      { to: '/rewards', label: 'Gerenciar' },
+      { to: '/rewards/new', label: 'Cadastro' },
+    ],
+  },
+  {
     label: 'Topicos',
     path: '/topics',
     icon: 'topics',
@@ -99,6 +117,23 @@ function Icon({ kind }: { kind: string }) {
           <circle cx="12" cy="13" r="7.5" />
           <path d="M12 9v4l3 2" />
           <path d="M9 3.5h6" />
+        </svg>
+      );
+    case 'goals':
+      return (
+        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
+          <circle cx="12" cy="12" r="8.5" />
+          <circle cx="12" cy="12" r="4.5" />
+          <path d="M12 7v10" />
+          <path d="M7 12h10" />
+        </svg>
+      );
+    case 'rewards':
+      return (
+        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
+          <path d="M6 4h12v5a6 6 0 0 1-6 6 6 6 0 0 1-6-6V4Z" />
+          <path d="M8 20h8" />
+          <path d="M12 15v5" />
         </svg>
       );
     case 'topics':

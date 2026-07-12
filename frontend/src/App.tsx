@@ -12,6 +12,10 @@ import { ReviewSchedules } from './pages/ReviewSchedules';
 import { ProjectDetail } from './pages/ProjectDetail';
 import { ProjectForm } from './pages/ProjectForm';
 import { Projects } from './pages/Projects';
+import { GoalForm } from './pages/GoalForm';
+import { Goals } from './pages/Goals';
+import { RewardForm } from './pages/RewardForm';
+import { Rewards } from './pages/Rewards';
 import { StudySessionForm } from './pages/StudySessionForm';
 import { StudySessions } from './pages/StudySessions';
 import { StudyLogDetail } from './pages/StudyLogDetail';
@@ -39,6 +43,12 @@ const router = createBrowserRouter([
           { path: 'study-sessions', element: <StudySessions /> },
           { path: 'study-sessions/new', element: <StudySessions /> },
           { path: 'study-sessions/:id/edit', element: <StudySessionForm /> },
+          { path: 'goals', element: <Goals /> },
+          { path: 'goals/new', element: <GoalForm /> },
+          { path: 'goals/:id/edit', element: <GoalForm /> },
+          { path: 'rewards', element: <Rewards /> },
+          { path: 'rewards/new', element: <RewardForm /> },
+          { path: 'rewards/:id/edit', element: <RewardForm /> },
           { path: 'topics', element: <Topics /> },
           { path: 'topics/new', element: <TopicForm /> },
           { path: 'topics/:id/edit', element: <TopicForm /> },
