@@ -121,6 +121,7 @@ CREATE TABLE IF NOT EXISTS study_sessions (
   title VARCHAR(160) NOT NULL,
   timer_mode VARCHAR(30) NOT NULL DEFAULT 'pomodoro',
   planned_minutes INT UNSIGNED NOT NULL,
+  pause_minutes INT UNSIGNED NULL,
   actual_minutes INT UNSIGNED NOT NULL DEFAULT 0,
   status ENUM('running', 'paused', 'completed', 'cancelled') NOT NULL DEFAULT 'running',
   started_at DATETIME NOT NULL,

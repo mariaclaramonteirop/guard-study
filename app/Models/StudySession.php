@@ -15,6 +15,7 @@ final class StudySession
         private string $title,
         private string $timerMode,
         private int $plannedMinutes,
+        private ?int $pauseMinutes,
         private int $actualMinutes,
         private string $status,
         private string $startedAt,
@@ -101,6 +102,16 @@ final class StudySession
     public function setPlannedMinutes(int $plannedMinutes): void
     {
         $this->plannedMinutes = $plannedMinutes;
+    }
+
+    public function getPauseMinutes(): ?int
+    {
+        return $this->pauseMinutes;
+    }
+
+    public function setPauseMinutes(?int $pauseMinutes): void
+    {
+        $this->pauseMinutes = $pauseMinutes;
     }
 
     public function getActualMinutes(): int

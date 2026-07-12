@@ -19,6 +19,7 @@ final class PdoStudySessionDao extends AbstractPdoDao implements StudySessionDao
             'title',
             'timer_mode',
             'planned_minutes',
+            'pause_minutes',
             'actual_minutes',
             'status',
             'started_at',

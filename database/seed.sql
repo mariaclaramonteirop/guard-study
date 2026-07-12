@@ -29,8 +29,8 @@ INSERT INTO review_schedules (user_id, project_id, study_log_id, checkpoint_id, 
 UPDATE checkpoints SET mistake_id = 1, review_schedule_id = 1 WHERE id = 1;
 UPDATE checkpoints SET review_schedule_id = 2 WHERE id = 2;
 
-INSERT INTO study_sessions (user_id, project_id, topic_id, study_log_id, title, timer_mode, planned_minutes, actual_minutes, status, started_at, ended_at, notes) VALUES
-(2, 1, 1, 1, 'Sessao Pomodoro inicial', 'pomodoro', 25, 25, 'completed', '2026-07-06 17:00:00', '2026-07-06 17:25:00', 'Sessao curta para validar o timer.');
+INSERT INTO study_sessions (user_id, project_id, topic_id, study_log_id, title, timer_mode, planned_minutes, pause_minutes, actual_minutes, status, started_at, ended_at, notes) VALUES
+(2, 1, 1, 1, 'Sessao Pomodoro inicial', 'pomodoro', 25, NULL, 25, 'completed', '2026-07-06 17:00:00', '2026-07-06 17:25:00', 'Sessao curta para validar o timer.');
 
 INSERT INTO checklist_items (user_id, study_log_id, title, is_completed) VALUES
 (2, 1, 'Ler resumao da aula', 1),
