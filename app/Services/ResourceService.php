@@ -102,7 +102,7 @@ final class ResourceService
     /** @param array<string, mixed> $data @return array<string, mixed> */
     private function normalize(array $data): array
     {
-        foreach (['topic_id', 'duration_minutes', 'project_id', 'study_log_id', 'checkpoint_id', 'mistake_id', 'review_schedule_id', 'planned_minutes', 'pause_minutes', 'actual_minutes'] as $field) {
+        foreach (['topic_id', 'duration_minutes', 'project_id', 'study_log_id', 'checkpoint_id', 'mistake_id', 'review_schedule_id', 'goal_id', 'planned_minutes', 'pause_minutes', 'actual_minutes', 'target_minutes', 'target_sessions', 'reward_points', 'points'] as $field) {
             if (array_key_exists($field, $data)) {
                 $data[$field] = $data[$field] === null || $data[$field] === '' ? null : (int) $data[$field];
             }
